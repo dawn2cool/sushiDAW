@@ -5,14 +5,14 @@
 
 /* ── CHANNEL DEFINITIONS ── */
 const CHANNELS = [
-  { name:'Rice',     emoji:'🍚', color:'#C8A840', bgColor:'#E8D89A' },
-  { name:'Salmon',   emoji:'🐟', color:'#E85038', bgColor:'#F09070' },
-  { name:'Tuna',     emoji:'🔴', color:'#B01828', bgColor:'#D04860' },
-  { name:'Avocado',  emoji:'🥑', color:'#3A8030', bgColor:'#70B860' },
-  { name:'Cucumber', emoji:'🥒', color:'#1A9058', bgColor:'#60C090' },
-  { name:'Egg',      emoji:'🥚', color:'#D09010', bgColor:'#F0C840' },
-  { name:'Prawn',    emoji:'🦐', color:'#C84028', bgColor:'#E87858' },
-  { name:'Seaweed',  emoji:'🌿', color:'#1A5030', bgColor:'#3A8050' },
+  { name:'cream cheese', color:'#C8A840', bgColor:'#E8D89A' },
+  { name:'salmon', color:'#E85038', bgColor:'#F09070' },
+  { name:'tuna', color:'#B01828', bgColor:'#D04860' },
+  { name:'avocado', color:'#3A8030', bgColor:'#70B860' },
+  { name:'cucumber', color:'#1A9058', bgColor:'#60C090' },
+  { name:'egg', color:'#D09010', bgColor:'#F0C840' },
+  { name:'prawn', color:'#C84028', bgColor:'#E87858' },
+  { name:'seaweed', color:'#1A5030', bgColor:'#3A8050' },
 ];
 
 /* ── STATE ── */
@@ -81,10 +81,6 @@ function renderRack() {
     dot.className = 'ch-dot';
     dot.style.background = ch.color;
 
-    const emoji = document.createElement('span');
-    emoji.className = 'ch-emoji';
-    emoji.textContent = ch.emoji;
-
     const name = document.createElement('span');
     name.className = 'ch-name';
     name.textContent = ch.name;
@@ -96,7 +92,7 @@ function renderRack() {
 
     const volWrap = buildVolume(r, ch);
 
-    lbl.append(dot, emoji, name, muteBtn, volWrap);
+    lbl.append(dot, name, muteBtn, volWrap);
     row.appendChild(lbl);
 
     /* Steps */
