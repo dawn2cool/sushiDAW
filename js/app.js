@@ -38,7 +38,6 @@ let nextTime  = 0;
 let activePat = 0;
 
 const MAX_ROWS = 100;
-// Each step is an object: { active: bool, subNotes: [null, null, null, null] }
 const patterns = Array(4).fill(null).map(() =>
   Array(MAX_ROWS).fill(null).map(() => 
     Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
@@ -65,19 +64,31 @@ function renderHeader() {
   if(!el) return;
   const cw = cellW();
   el.innerHTML = '';
+
+  const headerWrapper = document.createElement('div');
+  headerWrapper.style.display = 'flex';
+  headerWrapper.style.alignItems = 'center';
+  headerWrapper.style.padding = '0 10px';
+  headerWrapper.style.gap = '3px';
+
   for (let g = 0; g < numSteps / 4; g++) {
     const grp = document.createElement('div');
     grp.className = 'step-grp-h';
+    grp.style.display = 'flex';
+    grp.style.gap = '3px';
     if (g > 0) grp.style.marginLeft = '6px';
+
     for (let s = 0; s < 4; s++) {
       const n = document.createElement('div');
       n.className = 'step-num' + (s === 0 ? ' beat' : '');
       n.style.width = cw + 'px';
+      n.style.textAlign = 'center';
       n.textContent = g * 4 + s + 1;
       grp.appendChild(n);
     }
-    el.appendChild(grp);
+    headerWrapper.appendChild(grp);
   }
+  el.appendChild(headerWrapper);
 }
 
 /* ── RENDER RACK ── */
@@ -95,7 +106,6 @@ function renderRack() {
     const row = document.createElement('div');
     row.className = 'channel-row';
 
-    /* Label Section */
     const lbl = document.createElement('div');
     lbl.className = 'ch-label';
 
@@ -126,6 +136,7 @@ function renderRack() {
     };
 
     lbl.append(muteBtn, buildVolume(r, ch));
+    
     if (countInstances(ch.name) > 1) {
        const rmBtn = document.createElement('button');
        rmBtn.className = 'remove-btn';
@@ -136,9 +147,10 @@ function renderRack() {
 
     row.appendChild(lbl);
 
-    /* Steps Section */
     const stepsEl = document.createElement('div');
     stepsEl.className = 'ch-steps';
+
+    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ch.name);
 
     for (let g = 0; g < numSteps / 4; g++) {
       const grp = document.createElement('div');
@@ -154,8 +166,13 @@ function renderRack() {
         const cell = document.createElement('div');
         cell.className = 'cell' + (isOn ? ' on' : '') + (isGhost ? ' ghost' : '');
         cell.style.width  = cw + 'px';
-        cell.dataset.ch   = r;
-        cell.dataset.s    = idx;
+        cell.dataset.ch = baseIdx < 8 ? baseIdx : 'ai';
+        cell.dataset.s  = idx;
+
+        if (baseIdx >= 8) {
+          cell.style.background = isOn ? ch.color : ch.color + '22';
+          cell.style.borderColor = isOn ? ch.color : ch.color + '11';
+        }
 
         if (isOn && uiStep === idx && playing) cell.classList.add('playing');
 
@@ -164,7 +181,6 @@ function renderRack() {
           e.preventDefault();
           openPianoRoll(r, idx);
         };
-
         grp.appendChild(cell);
       }
       stepsEl.appendChild(grp);
@@ -196,7 +212,8 @@ function openPianoRoll(row, step) {
     key.textContent = note;
     key.onclick = () => {
       Audio.init(); Audio.resume();
-      Audio.playNote(row % INGREDIENT_DEFS.length, Audio.currentTime(), volumes[row], 11 - i);
+      const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ingredientName);
+      Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], 11 - i);
     };
     sidebar.appendChild(key);
   });
@@ -214,7 +231,8 @@ function openPianoRoll(row, step) {
         subCell.classList.toggle('active');
         saveSubNote(row, step, subStep, 11 - noteIdx);
         if (subCell.classList.contains('active')) {
-          Audio.playNote(row % INGREDIENT_DEFS.length, Audio.currentTime(), volumes[row], 11 - noteIdx);
+          const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ingredientName);
+          Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], 11 - noteIdx);
         }
       };
       gridContainer.appendChild(subCell);
@@ -225,13 +243,11 @@ function openPianoRoll(row, step) {
 function saveSubNote(row, step, subStep, pitch) {
   const grid = getGrid();
   const cell = grid[row][step];
-  
   if (cell.subNotes[subStep] === pitch) {
     cell.subNotes[subStep] = null;
   } else {
     cell.subNotes[subStep] = pitch;
   }
-  
   cell.active = cell.subNotes.some(n => n !== null);
   renderRack();
 }
@@ -244,13 +260,16 @@ function closePianoRoll() {
 function handleCellClick(r, idx, ch, cell) {
   const grid = getGrid();
   const cellData = grid[r][idx];
+  const inst = channelInstances[r];
 
   if (cell.classList.contains('ghost')) {
     cellData.active = true;
     GeminiSuggest.acceptSuggestion(r, idx);
     renderRack();
-    const previewPitch = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
-    Audio.playNote(r % INGREDIENT_DEFS.length, Audio.currentTime(), volumes[r], previewPitch);
+    Audio.init(); Audio.resume();
+    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+    const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
+    Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
     return;
   }
 
@@ -259,9 +278,11 @@ function handleCellClick(r, idx, ch, cell) {
     cell.classList.add('on', 'bounce');
     setTimeout(() => cell.classList.remove('bounce'), 150);
     Audio.init(); Audio.resume();
-    Audio.playNote(r % INGREDIENT_DEFS.length, Audio.currentTime(), volumes[r]);
+    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+    const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
+    Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
   } else {
-    cellData.subNotes = [null, null, null, null]; // Clear melody if toggled off
+    cellData.subNotes = [null, null, null, null]; 
     cell.classList.remove('on');
   }
 
@@ -274,28 +295,27 @@ function handleCellClick(r, idx, ch, cell) {
 function schedule() {
   if (!playing) return;
   const ahead = 0.1;
-  const dur   = 60 / bpm / 4; 
-  const grid  = getGrid();
+  const dur = 60 / bpm / 4; 
+  const grid = getGrid();
 
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % numSteps;
     
-    grid.forEach((row, chIdx) => {
-      const cell = row[curStep];
-      if (cell && cell.active && !muted[chIdx]) {
+    channelInstances.forEach((inst, r) => {
+      const cell = grid[r][curStep];
+      if (cell && cell.active && !muted[r]) {
+        const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
         const hasMelody = cell.subNotes.some(n => n !== null);
         
         if (hasMelody) {
-          // Play the Piano Roll melody
           const subStepDur = dur / 4;
           cell.subNotes.forEach((p, i) => {
             if (p !== null) {
-              Audio.playNote(chIdx % INGREDIENT_DEFS.length, nextTime + (i * subStepDur), volumes[chIdx], p);
+              Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
             }
           });
         } else {
-          // No melody? Just play the base ingredient hit once
-          Audio.playNote(chIdx % INGREDIENT_DEFS.length, nextTime, volumes[chIdx], 0);
+          Audio.playNote(baseIdx, nextTime, volumes[r], 0);
         }
       }
     });
@@ -351,16 +371,11 @@ function buildVolume(r, ch) {
 function addChannelInstance(def) {
   const existingCount = countInstances(def.name);
   if (existingCount >= 5) return;
-
   const newInst = { def, instanceNum: existingCount + 1, id: nextId++ };
   let insertIdx = channelInstances.length;
   for (let i = channelInstances.length - 1; i >= 0; i--) {
-    if (channelInstances[i].def.name === def.name) {
-      insertIdx = i + 1;
-      break;
-    }
+    if (channelInstances[i].def.name === def.name) { insertIdx = i + 1; break; }
   }
-
   channelInstances.splice(insertIdx, 0, newInst);
   for (let p = 0; p < 4; p++) {
     patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
@@ -425,6 +440,11 @@ const App = {
     bpm = Math.max(40, Math.min(300, bpm + d));
     document.getElementById('bpm-display').textContent = bpm;
   },
+  nudgeSteps(d) {
+    numSteps = Math.max(8, Math.min(64, numSteps + d));
+    document.getElementById('steps-display').textContent = numSteps;
+    renderRack();
+  },
   clearAll() {
     patterns[activePat].forEach(row => row.forEach(cell => {
         cell.active = false;
@@ -450,9 +470,11 @@ function updateStatus() {
   renderShelf();
   renderRack();
   window.addEventListener('resize', () => renderRack());
-  // Piano Roll Close listener
   document.addEventListener('keydown', e => {
     if (e.code === 'Escape') closePianoRoll();
-    if (e.code === 'Space') App.togglePlay();
+    if (e.code === 'Space') {
+      e.preventDefault();
+      App.togglePlay();
+    }
   });
 })();
