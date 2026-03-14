@@ -52,9 +52,9 @@ let activePat = 0;
   patterns[4][MAX_ROWS][32]
   We keep a generous MAX_ROWS; only channelInstances.length rows are active.
 */
-const MAX_ROWS = 32;
+const MAX_ROWS = 300;
 const patterns = Array(4).fill(null).map(() =>
-  Array(MAX_ROWS).fill(null).map(() => Array(32).fill(false))
+  Array(MAX_ROWS).fill(null).map(() => Array(300).fill(false))
 );
 const volumes  = Array(MAX_ROWS).fill(0.75);
 const muted    = Array(MAX_ROWS).fill(false);
@@ -289,7 +289,7 @@ function addChannelInstance(def) {
 
   // Shift pattern rows down to make room
   for (let p = 0; p < 4; p++) {
-    patterns[p].splice(insertIdx, 0, Array(32).fill(false));
+    patterns[p].splice(insertIdx, 0, Array(300).fill(false));
     if (patterns[p].length > MAX_ROWS) patterns[p].pop();
   }
   volumes.splice(insertIdx, 0, 0.75);
@@ -313,7 +313,7 @@ function removeChannelInstance(rowIdx) {
 
   for (let p = 0; p < 4; p++) {
     patterns[p].splice(rowIdx, 1);
-    patterns[p].push(Array(32).fill(false)); // keep array length
+    patterns[p].push(Array(300).fill(false)); // keep array length
   }
   volumes.splice(rowIdx, 1); volumes.push(0.75);
   muted.splice(rowIdx, 1);   muted.push(false);
@@ -387,11 +387,12 @@ function schedule() {
   const grid  = getGrid();
 
   while (nextTime < Audio.currentTime() + ahead) {
-    curStep = (curStep + 1) % numSteps;
-    channelInstances.forEach((inst, r) => {
-      if (grid[r][curStep] && !muted[r]) {
-        Audio.playNote(r % INGREDIENT_DEFS.length, nextTime, volumes[r]);
-      }
+    patterns.forEach((grid) => {
+          channelInstances.forEach((inst, r) => {
+            if (grid[r][curStep] && !muted[r]) {
+              Audio.playNote(r % INGREDIENT_DEFS.length, nextTime, volumes[r]);
+            }
+          });
     });
     animateStep(curStep);
     nextTime += dur;
@@ -458,13 +459,13 @@ const App = {
   },
 
   nudgeSteps(d) {
-    numSteps = Math.max(8, Math.min(32, numSteps + d));
+    numSteps = Math.max(8, Math.min(300, numSteps + d));
     document.getElementById('steps-display').textContent = numSteps;
     renderRack();
   },
 
   clearAll() {
-    patterns[activePat] = Array(MAX_ROWS).fill(null).map(() => Array(32).fill(false));
+    patterns[activePat] = Array(MAX_ROWS).fill(null).map(() => Array(300).fill(false));
     GeminiSuggest.clearSuggestions();
     renderRack();
   },
