@@ -1,0 +1,113 @@
+/* ════════════════════════════════════════
+   animations.css  —  SushiDAW
+   All keyframes + animation classes
+   ════════════════════════════════════════ */
+
+/* ── Playhead beat pulse on active cells ── */
+@keyframes cellBounce {
+  0%   { transform: scale(1.22) rotate(1deg); }
+  60%  { transform: scale(0.96) rotate(-0.3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ── Ghost cell breathing ── */
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.5; transform: scaleY(0.96); }
+  50%       { opacity: 1;   transform: scaleY(1.04); }
+}
+
+/* ── Gemini indicator fade ── */
+@keyframes gemFade {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 1; }
+}
+
+/* ── Logo finish-btn emoji bounce ── */
+@keyframes rollBounce {
+  0%,100% { transform: rotate(-6deg) scale(1);   }
+  40%      { transform: rotate(6deg)  scale(1.15); }
+  70%      { transform: rotate(-3deg) scale(0.96); }
+}
+
+/* ── Generic wiggle (wobble-hover) ── */
+@keyframes wiggle {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(-4deg); }
+  45%  { transform: rotate(4deg); }
+  70%  { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* ── Decorative bowl float ── */
+@keyframes gentleFloat {
+  0%,100% { transform: translateY(0px); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* ── Shelf pill entrance ── */
+@keyframes pillSlideIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+.shelf-pill { animation: pillSlideIn 0.25s ease-out both; }
+.shelf-pill:nth-child(1)  { animation-delay: 0.02s; }
+.shelf-pill:nth-child(2)  { animation-delay: 0.05s; }
+.shelf-pill:nth-child(3)  { animation-delay: 0.08s; }
+.shelf-pill:nth-child(4)  { animation-delay: 0.11s; }
+.shelf-pill:nth-child(5)  { animation-delay: 0.14s; }
+.shelf-pill:nth-child(6)  { animation-delay: 0.17s; }
+.shelf-pill:nth-child(7)  { animation-delay: 0.20s; }
+.shelf-pill:nth-child(8)  { animation-delay: 0.23s; }
+
+/* ── Channel row entrance ── */
+@keyframes rowSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0);     }
+}
+.channel-row {
+  animation: rowSlideIn 0.22s ease-out both;
+}
+/* stagger assigned in JS via inline animation-delay */
+
+/* ── "Add layer" ripple ── */
+@keyframes addRipple {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  60%  { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(1);    opacity: 0; }
+}
+.add-ripple {
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: rgba(255,255,255,0.4);
+  animation: addRipple 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ── Roll modal reveal ── */
+@keyframes rollNamePop {
+  from { opacity: 0; transform: scale(0.6) rotate(-4deg); }
+  to   { opacity: 1; transform: scale(1)   rotate(0deg);  }
+}
+
+/* ── Playhead tick flash ── */
+@keyframes tickFlash {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.55; }
+  100% { opacity: 1; }
+}
+.step-num.ticking { animation: tickFlash 0.15s ease-out; }
+
+/* ── Page load fade-in ── */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.topbar    { animation: pageFadeIn 0.4s ease-out 0.05s both; }
+.transport { animation: pageFadeIn 0.4s ease-out 0.12s both; }
+.rack-area { animation: pageFadeIn 0.4s ease-out 0.20s both; }
+.ingredient-shelf { animation: pageFadeIn 0.5s ease-out 0.28s both; }
+
+/* ── Theme transition ── */
+* { transition: background-color 0.25s, border-color 0.2s, color 0.2s, box-shadow 0.2s; }
+/* except cells which need faster transitions for playhead */
+.cell { transition: transform 0.07s, filter 0.09s !important; }
