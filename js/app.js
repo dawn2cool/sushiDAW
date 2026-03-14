@@ -4,14 +4,14 @@
    ════════════════════════════════════════ */
 
 const INGREDIENT_DEFS = [
-  { name:'cream cheese', color:'#C8A840' },
-  { name:'salmon', color:'#E85038' },
-  { name:'tuna', color:'#B01828' },
-  { name:'avocado', color:'#3A8030' },
-  { name:'cucumber', color:'#1A9058' },
-  { name:'egg', color:'#D09010' },
-  { name:'prawn', color:'#C84028' },
-  { name:'wasabi', color:'#1A5030' },
+  { name:'cream cheese',  color:'#C8A840' },
+  { name:'salmon',        color:'#E85038' },
+  { name:'tuna',          color:'#B01828' },
+  { name:'avocado',       color:'#3A8030' },
+  { name:'cucumber',      color:'#1A9058' },
+  { name:'egg',           color:'#D09010' },
+  { name:'prawn',         color:'#C84028' },
+  { name:'wasabi',        color:'#1A5030' },
 ];
 
 let channelInstances = INGREDIENT_DEFS.map((def, i) => ({
@@ -39,7 +39,7 @@ let activePat  = 0;
 
 const MAX_ROWS = 100;
 const patterns = Array(4).fill(null).map(() =>
-  Array(MAX_ROWS).fill(null).map(() => 
+  Array(MAX_ROWS).fill(null).map(() =>
     Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
   )
 );
@@ -56,7 +56,7 @@ function cellW() {
   const lw     = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--label-w') || '148');
   const avail  = (scroll?.clientWidth || 600) - lw - 24;
   const gaps   = (numSteps - 1) * 3 + (Math.floor(numSteps / 4) - 1) * 6;
-  return Math.max(16, Math.min(28, Math.floor((avail - gaps) / numSteps)));
+  return Math.max(24, Math.min(36, Math.floor((avail - gaps) / numSteps)));
 }
 
 function renderHeader() {
@@ -82,6 +82,7 @@ function renderHeader() {
       const n = document.createElement('div');
       n.className = 'step-num' + (s === 0 ? ' beat' : '');
       n.style.width = cw + 'px';
+      n.style.height = '14px';
       n.style.textAlign = 'center';
       n.textContent = g * 4 + s + 1;
       grp.appendChild(n);
@@ -95,7 +96,7 @@ function renderHeader() {
 function renderRack() {
   const rack = document.getElementById('rack');
   if (!rack) return;
-  
+
   rack.innerHTML = '';
   const grid     = getGrid();
   const cw       = cellW();
@@ -117,6 +118,9 @@ function renderRack() {
     name.className = 'ch-name';
     name.textContent = ch.name;
 
+    // Set the row accent color stripe via CSS variable
+    row.style.setProperty('--row-accent', ch.color);
+
     if (countInstances(ch.name) > 1) {
       const badge = document.createElement('span');
       badge.className = 'ch-instance-badge';
@@ -129,14 +133,14 @@ function renderRack() {
     const muteBtn = document.createElement('button');
     muteBtn.className = 'mute-btn' + (muted[r] ? ' muted' : '');
     muteBtn.textContent = 'M';
-    muteBtn.onclick = (e) => { 
+    muteBtn.onclick = (e) => {
       e.stopPropagation();
-      muted[r] = !muted[r]; 
-      muteBtn.classList.toggle('muted', muted[r]); 
+      muted[r] = !muted[r];
+      muteBtn.classList.toggle('muted', muted[r]);
     };
 
     lbl.append(muteBtn, buildVolume(r, ch));
-    
+
     if (countInstances(ch.name) > 1) {
        const rmBtn = document.createElement('button');
        rmBtn.className = 'remove-btn';
@@ -166,6 +170,7 @@ function renderRack() {
         const cell = document.createElement('div');
         cell.className = 'cell' + (isOn ? ' on' : '') + (isGhost ? ' ghost' : '');
         cell.style.width  = cw + 'px';
+        cell.style.height = cw + 'px';
         cell.dataset.ch = baseIdx < 8 ? baseIdx : 'ai';
         cell.dataset.s  = idx;
 
@@ -197,10 +202,10 @@ function openPianoRoll(row) {
   const gridContainer = document.getElementById('piano-roll-grid');
   const sidebar = document.querySelector('.piano-keys-sidebar');
   const titleEl = overlay.querySelector('.piano-roll-header span');
-  
+
   const ingredientName = channelInstances[row].def.name;
   if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor (Full Bar)`;
-  
+
   overlay.classList.remove('hidden');
   gridContainer.innerHTML = '';
   sidebar.innerHTML = '';
@@ -243,11 +248,11 @@ function openPianoRoll(row) {
           // Clear column to prevent overlapping notes in one step
           const columnCells = gridContainer.querySelectorAll(`.sub-cell:nth-child(${numSteps}n + ${s + 1})`);
           columnCells.forEach(c => c.classList.remove('active'));
-          
+
           subCell.classList.add('active');
           currentData.active = true;
           currentData.subNotes[0] = pitch;
-          
+
           Audio.init(); Audio.resume();
           const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ingredientName);
           Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], pitch);
@@ -289,7 +294,7 @@ function handleCellClick(r, idx, ch, cell) {
     const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
     Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
   } else {
-    cellData.subNotes = [null, null, null, null]; 
+    cellData.subNotes = [null, null, null, null];
     cell.classList.remove('on');
   }
 
@@ -302,12 +307,12 @@ function handleCellClick(r, idx, ch, cell) {
 function schedule() {
   if (!playing) return;
   const ahead = 0.1;
-  const dur = 60 / bpm / 4; 
+  const dur = 60 / bpm / 4;
   const grid = getGrid();
 
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % numSteps;
-    
+
     patterns.forEach((grid) => {
           channelInstances.forEach((inst, r) => {
             const cell = grid[r][curStep];
@@ -419,7 +424,8 @@ function renderShelf() {
     const count = countInstances(def.name);
     if(count > 1) pill.innerHTML += `<span class="shelf-pill-count visible">${count}</span>`;
     pill.onclick = () => addChannelInstance(def);
-    pill.style.borderColor = def.color + '60';
+    pill.style.borderColor = def.color + '70';
+    pill.style.background = def.color + '18';
     container.appendChild(pill);
   });
 }

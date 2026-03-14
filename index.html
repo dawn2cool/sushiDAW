@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
     <title>SushiDAW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=Caveat:wght@500;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=Caveat:wght@500;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/base.css"/>
     <link rel="stylesheet" href="css/ingredients.css"/>
     <link rel="stylesheet" href="css/animations.css"/>
@@ -30,14 +30,14 @@
 
 <!-- ══ SETTINGS DRAWER ══ -->
 <div id="piano-roll-overlay" class="hidden">
-  <div class="piano-roll-header">
-    <span>Ingredient Editor</span>
-    <button class="done-btn" onclick="closePianoRoll()">Done</button>
-  </div>
-  <div class="piano-roll-grid-container">
-    <div class="piano-keys-sidebar"></div>
-    <div id="piano-roll-grid"></div>
-  </div>
+    <div class="piano-roll-header">
+        <span>Ingredient Editor</span>
+        <button class="done-btn" onclick="closePianoRoll()">Done</button>
+    </div>
+    <div class="piano-roll-grid-container">
+        <div class="piano-keys-sidebar"></div>
+        <div id="piano-roll-grid"></div>
+    </div>
 </div>
 
 <!-- ── Settings drawer (Gemini key lives here, no label) ── -->
@@ -97,6 +97,16 @@
     <div class="rack-scroll" id="rack-scroll">
         <div class="step-header" id="step-header"></div>
         <div class="rack" id="rack"></div>
+        <!-- Rice + Nori base sits directly under ingredients -->
+        <div class="rack-sushi-base" aria-hidden="true">
+            <div class="rsb-inner">
+                <div class="rsb-label">~ rice + nori ~</div>
+                <div class="rsb-bars">
+                    <div class="rsb-bar rsb-rice"></div>
+                    <div class="rsb-bar rsb-nori"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -125,14 +135,6 @@
         </div>
     </div>
 
-    <!-- Decorative seaweed + rice base (purely visual, no sound) -->
-    <div class="base-graphic" aria-hidden="true">
-        <div class="base-label">rice + nori !</div>
-        <div class="base-art-simple">
-            <div class="base-bar base-rice"></div>
-            <div class="base-bar base-seaweed"></div>
-        </div>
-    </div>
 </div>
 
 <!-- ══ SUSHI ROLL MODAL ══ -->
