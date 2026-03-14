@@ -128,54 +128,13 @@
     <!-- Decorative seaweed + rice base (purely visual, no sound) -->
     <div class="base-graphic" aria-hidden="true">
         <div class="base-label">your base</div>
-        <div class="base-art">
-            <!-- Seaweed SVG -->
-            <svg class="deco-seaweed" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0" y="60" width="120" height="30" rx="4" fill="#2A5C3A"/>
-                <!-- seaweed sheet texture lines -->
-                <line x1="12" y1="60" x2="12" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <line x1="28" y1="60" x2="28" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <line x1="44" y1="60" x2="44" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <line x1="60" y1="60" x2="60" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <line x1="76" y1="60" x2="76" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <line x1="92" y1="60" x2="92" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <line x1="108" y1="60" x2="108" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
-                <!-- horizontal grain -->
-                <line x1="0" y1="70" x2="120" y2="70" stroke="#3A7050" stroke-width="0.8" opacity="0.6"/>
-                <line x1="0" y1="80" x2="120" y2="80" stroke="#3A7050" stroke-width="0.8" opacity="0.6"/>
-                <!-- rice layer -->
-                <rect x="0" y="28" width="120" height="32" rx="2" fill="#F0EAD0"/>
-                <!-- rice grains -->
-                <ellipse cx="14" cy="38" rx="5" ry="3" fill="white" opacity="0.85"/>
-                <ellipse cx="30" cy="43" rx="5" ry="3" fill="white" opacity="0.80"/>
-                <ellipse cx="22" cy="50" rx="4" ry="2.5" fill="white" opacity="0.75"/>
-                <ellipse cx="48" cy="36" rx="5" ry="3" fill="white" opacity="0.85"/>
-                <ellipse cx="60" cy="47" rx="5" ry="3" fill="white" opacity="0.80"/>
-                <ellipse cx="74" cy="39" rx="4" ry="2.5" fill="white" opacity="0.75"/>
-                <ellipse cx="88" cy="44" rx="5" ry="3" fill="white" opacity="0.85"/>
-                <ellipse cx="101" cy="52" rx="4" ry="2.5" fill="white" opacity="0.75"/>
-                <ellipse cx="112" cy="36" rx="4" ry="2.5" fill="white" opacity="0.80"/>
-                <ellipse cx="38" cy="56" rx="4" ry="2.5" fill="white" opacity="0.70"/>
-                <ellipse cx="67" cy="56" rx="5" ry="3" fill="white" opacity="0.70"/>
-                <ellipse cx="95" cy="58" rx="4" ry="2.5" fill="white" opacity="0.70"/>
-                <!-- label text via Caveat style handled in CSS -->
-                <text x="60" y="18" text-anchor="middle" font-family="Caveat, cursive" font-size="13" fill="#3A7050" font-weight="700">nori + rice</text>
-                <text x="60" y="26" text-anchor="middle" font-family="Caveat, cursive" font-size="9" fill="#6A9070">(always included)</text>
-            </svg>
-
-            <!-- Right side rice bowl decoration -->
-            <svg class="deco-bowl" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="30" cy="45" rx="26" ry="8" fill="#D4C090"/>
-                <path d="M 8 32 Q 8 52 30 52 Q 52 52 52 32 Z" fill="#F0EAD0"/>
-                <ellipse cx="30" cy="32" rx="22" ry="7" fill="#E8DEC0"/>
-                <!-- grain blobs -->
-                <ellipse cx="22" cy="30" rx="4" ry="2.5" fill="white" opacity="0.9"/>
-                <ellipse cx="32" cy="28" rx="4" ry="2.5" fill="white" opacity="0.85"/>
-                <ellipse cx="40" cy="31" rx="3.5" ry="2" fill="white" opacity="0.85"/>
-                <ellipse cx="26" cy="36" rx="3.5" ry="2" fill="white" opacity="0.75"/>
-                <ellipse cx="36" cy="36" rx="3" ry="2" fill="white" opacity="0.75"/>
-                <text x="30" y="58" text-anchor="middle" font-family="Caveat, cursive" font-size="10" fill="#9A8050">rice</text>
-            </svg>
+            <div class="base-graphic" aria-hidden="true">
+                <div class="base-label">rice + nori !</div>
+                <div class="base-art-simple">
+                    <div class="base-bar base-rice"></div>
+                    <div class="base-bar base-seaweed"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

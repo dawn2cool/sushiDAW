@@ -477,23 +477,57 @@ html, body {
 .base-graphic {
   padding: 12px 0 0;
   border-top: 2px dashed rgba(255,255,255,0.18);
+  margin: 0 -16px;
 }
+
 .base-label {
   font-family: var(--font-mono); font-size: 13px;
-  color: rgba(200,240,210,0.55); margin-bottom: 6px;
+  color: rgba(200,240,210,0.55); margin-bottom: 8px;
+  margin-bottom: 8px;
+  padding: 0 16px;
 }
-.base-art {
-  display: flex; align-items: flex-end; gap: 14px;
-  padding-bottom: 0;
+
+.base-art-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  width: 100%;
 }
-.deco-seaweed {
-  width: 100%; max-width: 320px; height: auto;
-  display: block;
+
+/* Base horizontal line shape */
+.base-bar {
+  height: 14px;
+  width: 100%;
+  border-radius: 6px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
 }
-.deco-bowl {
-  width: 60px; height: 60px;
-  flex-shrink: 0; margin-bottom: 4px;
-  animation: gentleFloat 4s ease-in-out infinite;
+
+/* Rice Texture (Matches the cream cheese/rice cell) */
+.base-rice {
+  background:
+    repeating-linear-gradient(
+      12deg,
+      rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 3px,
+      transparent 3px, transparent 9px
+    ),
+    linear-gradient(160deg, #FFF9E8 0%, #F5E8C0 50%, #E8D898 100%);
+  border-color: #D4CBB3;
+}
+
+/* Seaweed Texture (Matches the seaweed cell) */
+.base-seaweed {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      #1A5830 0px, #1A5830 3px,
+      #0C3A1C 3px, #0C3A1C 5px,
+      #1E6438 5px, #1E6438 8px,
+      #123220 8px, #123220 10px
+    ),
+    linear-gradient(90deg, rgba(28,80,48,0.7) 0%, transparent 40%, rgba(18,60,32,0.7) 100%);
+  border-color: #0F2C1A;
 }
 
 /* ════════════════════════════════════════
