@@ -12,7 +12,7 @@ const CHANNELS = [
   { name:'cucumber', color:'#1A9058', bgColor:'#60C090' },
   { name:'egg', color:'#D09010', bgColor:'#F0C840' },
   { name:'prawn', color:'#C84028', bgColor:'#E87858' },
-  { name:'seaweed', color:'#1A5030', bgColor:'#3A8050' },
+  { name:'wasabi', color:'#1A5030', bgColor:'#3A8050' },
 ];
 
 /* ── STATE ── */
