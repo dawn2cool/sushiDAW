@@ -385,18 +385,23 @@ function schedule() {
   const ahead = 0.1;
   const dur   = 60 / bpm / 4;
   const grid  = getGrid();
+while (nextTime < Audio.currentTime() + ahead) {
+    // Advance the step counter
+    curStep = (curStep + 1) % numSteps;
 
-  while (nextTime < Audio.currentTime() + ahead) {
+    // Play notes from ALL patterns
     patterns.forEach((grid) => {
-          channelInstances.forEach((inst, r) => {
-            if (grid[r][curStep] && !muted[r]) {
-              const voiceToPlay = inst.def.voiceIdx !== undefined ?
-                                  inst.def.voiceIdx :
-                                  (r % INGREDIENT_DEFS.length);
-              Audio.playNote(voiceToPlay, nextTime, volumes[r]);
-            }
-          });
+      channelInstances.forEach((inst, r) => {
+        if (grid[r][curStep] && !muted[r]) {
+          // Use custom AI voice index if it exists, otherwise use default
+          const voiceIdx = inst.def.voiceIdx !== undefined ?
+                           inst.def.voiceIdx : (r % INGREDIENT_DEFS.length);
+          Audio.playNote(voiceIdx, nextTime, volumes[r]);
+        }
+      });
     });
+
+    // Trigger the visual movement of the bar
     animateStep(curStep);
     nextTime += dur;
   }
