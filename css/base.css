@@ -250,8 +250,8 @@ html, body {
   display: flex; align-items: center; gap: 7px;
   padding: 0 10px;
   height: 44px;
-  width: var(--label-w, 152px);
-  min-width: var(--label-w, 152px);
+  width: var(--label-w, 200px);
+  min-width: var(--label-w, 200px);
   border-right: 1px solid var(--border);
   flex-shrink: 0;
   background: var(--surface2);
@@ -279,7 +279,7 @@ html, body {
 
 /* Volume */
 .vol-wrap {
-  position: relative; width: 26px; height: 16px;
+  position: relative; width: 30px; height: 16px;
   cursor: ew-resize; flex-shrink: 0;
 }
 .vol-track {
@@ -290,7 +290,7 @@ html, body {
 .vol-fill { height: 100%; border-radius: 2px; }
 .vol-thumb {
   position: absolute; top: 2px;
-  width: 10px; height: 10px; border-radius: 50%;
+  width: 100px; height: 10px; border-radius: 50%;
   background: var(--surface); border: 1.5px solid var(--border2);
   transform: translateX(-50%);
   transition: border-color 0.15s, background 0.25s;
