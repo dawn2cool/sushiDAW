@@ -138,5 +138,72 @@ Step indices are 0-based.`;
     onClear   = clearCb;
   }
 
-  return { notify, onUpdate, acceptSuggestion, clearSuggestions, getSuggestions };
+  async function generateIngredient(description) {
+    if (!description) return;
+    const key = getKey();
+    if (!key) {
+      alert("Please enter a Gemini API Key in settings first!");
+      return;
+    }
+
+    const systemInstruction = `You are a molecular gastronomy sound designer.
+    The user wants to add "${description}" to their sushi DAW.
+    1. Validate if it is a food/ingredient.
+    2. If valid, suggest Web Audio synth parameters based on flavor profile and texture:
+       freq (number 20-2000),
+       wave (string: 'sine', 'square', 'sawtooth', or 'triangle'),
+       decay (number 0.05-0.8),
+       gain (0.5),
+       filter (object with 'type': 'lowpass'|'highpass'|'bandpass' and 'freq': 200-5000).
+    Respond ONLY with valid JSON, no markdown:
+    {"valid": true, "color": "#HEXCODE", "synth": {"freq": 440, "wave": "sine", "decay": 0.2, "gain": 0.5, "filter": {"type": "lowpass", "freq": 1000}}}`;
+
+    const userMessage = `Create a sound for the ingredient: ${description}`;
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: userMessage }] }],
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+            generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
+          })
+        }
+      );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+
+      if (parsed.valid) {
+        // 1. Register the new sound in the audio engine
+        const newIdx = Audio.addDynamicVoice(parsed.synth);
+
+        // 2. Add to the palette (using the new index to ensure audio.js plays the right sound)
+        INGREDIENT_DEFS.push({
+          name: description.toLowerCase(),
+          color: parsed.color,
+          defCount: 1,
+          voiceIdx: newIdx // Store reference to the custom voice
+        });
+
+        // 3. Refresh UI
+        if (typeof renderShelf === 'function') renderShelf();
+        console.log(`Added AI Ingredient: ${description}`, parsed);
+      } else {
+        alert(`"${description}" doesn't seem like a sushi ingredient!`);
+      }
+    } catch (err) {
+      console.error("Failed to generate ingredient:", err);
+      alert("Error connecting to Gemini. Check your key and console.");
+    }
+  }
+
+  return { notify, onUpdate, acceptSuggestion, clearSuggestions, getSuggestions, generateIngredient};
 })();

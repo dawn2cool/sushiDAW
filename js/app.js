@@ -390,7 +390,10 @@ function schedule() {
     patterns.forEach((grid) => {
           channelInstances.forEach((inst, r) => {
             if (grid[r][curStep] && !muted[r]) {
-              Audio.playNote(r % INGREDIENT_DEFS.length, nextTime, volumes[r]);
+              const voiceToPlay = inst.def.voiceIdx !== undefined ?
+                                  inst.def.voiceIdx :
+                                  (r % INGREDIENT_DEFS.length);
+              Audio.playNote(voiceToPlay, nextTime, volumes[r]);
             }
           });
     });

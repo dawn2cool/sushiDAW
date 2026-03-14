@@ -104,6 +104,10 @@
         <span class="shelf-sub">tap to add a layer ↓</span>
     </div>
     <div class="shelf-pills" id="shelf-pills"></div>
+    <div class="ai-ingredient-bar">
+        <input type="text" id="ai-ing-input" placeholder="enter custom ingredient!">
+        <button onclick="GeminiSuggest.generateIngredient(document.getElementById('ai-ing-input').value)">create !</button>
+    </div>
 
     <!-- Decorative seaweed + rice base (purely visual, no sound) -->
     <div class="base-graphic" aria-hidden="true">

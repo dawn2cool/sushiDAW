@@ -60,5 +60,20 @@ const Audio = (() => {
     return ctx ? ctx.currentTime : 0;
   }
 
-  return { init, resume, playNote, currentTime };
+  return {
+      init,
+      resume,
+      playNote,
+      currentTime,
+      addDynamicVoice: (params) => {
+        VOICES.push({
+          freq: params.freq || 440,
+          wave: params.wave || 'sine',
+          decay: params.decay || 0.2,
+          gain: params.gain || 0.5,
+          filter: params.filter || { type: 'lowpass', freq: 1000 }
+        });
+        return VOICES.length - 1;
+      }
+    };
 })();
