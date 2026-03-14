@@ -446,12 +446,28 @@ const App = {
     renderRack();
   },
   clearAll() {
-    patterns[activePat].forEach(row => row.forEach(cell => {
-        cell.active = false;
-        cell.subNotes = [null,null,null,null];
-    }));
-    renderRack();
-    updateStatus();
+      patterns[activePat].forEach(row => row.forEach(cell => {
+          cell.active = false;
+          cell.subNotes = [null,null,null,null];
+      }));
+      renderRack();
+      updateStatus();
+    },
+  randomise() {
+      const grid = getGrid();
+      channelInstances.forEach((inst, r) => {
+        const defIdx = INGREDIENT_DEFS.indexOf(inst.def);
+        const threshold = defIdx === 0 ? 0.72 : defIdx < 3 ? 0.80 : 0.87;
+        for (let s = 0; s < numSteps; s++) {
+          // Randomly turn cells on/off based on the threshold
+          grid[r][s].active = Math.random() > threshold;
+          // Reset piano roll notes for randomized cells
+          grid[r][s].subNotes = [null, null, null, null];
+        }
+      });
+      if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+      renderRack();
+      updateStatus();
   }
 };
 
@@ -465,12 +481,67 @@ function updateStatus() {
   if(el) el.textContent = total;
 }
 
-/* ── INIT ── */
+/* ════════════════════════════════════════
+   PATTERN SWITCHER
+   ════════════════════════════════════════ */
+function renderPatterns() {
+  const c = document.getElementById('pat-btns');
+  if (!c) return;
+  c.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const b = document.createElement('button');
+    b.className = 'pat-btn' + (i === activePat ? ' active' : '');
+    b.textContent = i + 1;
+    b.onclick = () => {
+      activePat = i;
+      const statPat = document.getElementById('stat-pat');
+      if (statPat) statPat.textContent = i + 1;
+      renderPatterns();
+      if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+      renderRack();
+    };
+    c.appendChild(b);
+  }
+}
+
+/* ════════════════════════════════════════
+   THEME / SETTINGS
+   ════════════════════════════════════════ */
+const UI = {
+  toggleTheme() {
+    const html = document.documentElement;
+    const next = html.dataset.theme === 'light' ? 'dark' : 'light';
+    html.dataset.theme = next;
+    document.getElementById('theme-icon').textContent = next === 'dark' ? '☀' : '☽';
+    localStorage.setItem('sushidaw-theme', next);
+  },
+  toggleSettings() {
+    const d = document.getElementById('settings-drawer');
+    d.classList.toggle('open');
+    d.setAttribute('aria-hidden', d.classList.contains('open') ? 'false' : 'true');
+  }
+};
+
+/* ════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════ */
 (function init() {
+  // 1. Restore Theme
+  const saved = localStorage.getItem('sushidaw-theme');
+  if (saved) {
+    document.documentElement.dataset.theme = saved;
+    document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
+  }
+
+  // 2. Render UI
+  renderPatterns();
   renderShelf();
   renderRack();
+
+  // 3. Event Listeners
   window.addEventListener('resize', () => renderRack());
   document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Escape') closePianoRoll();
     if (e.code === 'Space') {
       e.preventDefault();
