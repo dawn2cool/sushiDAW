@@ -301,24 +301,26 @@ function schedule() {
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % numSteps;
     
-    channelInstances.forEach((inst, r) => {
-      const cell = grid[r][curStep];
-      if (cell && cell.active && !muted[r]) {
-        const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
-        const hasMelody = cell.subNotes.some(n => n !== null);
-        
-        if (hasMelody) {
-          const subStepDur = dur / 4;
-          cell.subNotes.forEach((p, i) => {
-            if (p !== null) {
-              Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
+    patterns.forEach((grid) => {
+          channelInstances.forEach((inst, r) => {
+            const cell = grid[r][curStep];
+            if (cell && cell.active && !muted[r]) {
+              const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+              const hasMelody = cell.subNotes.some(n => n !== null);
+
+              if (hasMelody) {
+                const subStepDur = dur / 4;
+                cell.subNotes.forEach((p, i) => {
+                  if (p !== null) {
+                    Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
+                  }
+                });
+              } else {
+                Audio.playNote(baseIdx, nextTime, volumes[r], 0);
+              }
             }
           });
-        } else {
-          Audio.playNote(baseIdx, nextTime, volumes[r], 0);
-        }
-      }
-    });
+        });
 
     animateStep(curStep);
     nextTime += dur;
@@ -377,19 +379,21 @@ function addChannelInstance(def) {
     if (channelInstances[i].def.name === def.name) { insertIdx = i + 1; break; }
   }
   channelInstances.splice(insertIdx, 0, newInst);
-  for (let p = 0; p < 4; p++) {
-    patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
-  }
-  volumes.splice(insertIdx, 0, 0.75);
-  muted.splice(insertIdx, 0, false);
-  renderShelf();
-  renderRack();
+    for (let p = 0; p < patterns.length; p++) {
+      patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
+    }
+    volumes.splice(insertIdx, 0, 0.75);
+    muted.splice(insertIdx, 0, false);
+    renderShelf();
+    renderRack();
 }
 
 function removeChannelInstance(rowIdx) {
   if (channelInstances.length <= 1) return;
   channelInstances.splice(rowIdx, 1);
-  for (let p = 0; p < 4; p++) patterns[p].splice(rowIdx, 1);
+  for (let p = 0; p < patterns.length; p++) {
+        patterns[p].splice(rowIdx, 1);
+  }
   volumes.splice(rowIdx, 1);
   muted.splice(rowIdx, 1);
   renderShelf();
@@ -488,20 +492,43 @@ function renderPatterns() {
   const c = document.getElementById('pat-btns');
   if (!c) return;
   c.innerHTML = '';
-  for (let i = 0; i < 4; i++) {
-    const b = document.createElement('button');
-    b.className = 'pat-btn' + (i === activePat ? ' active' : '');
-    b.textContent = i + 1;
-    b.onclick = () => {
-      activePat = i;
-      const statPat = document.getElementById('stat-pat');
-      if (statPat) statPat.textContent = i + 1;
-      renderPatterns();
-      if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
-      renderRack();
-    };
-    c.appendChild(b);
+  for (let i = 0; i < patterns.length; i++) {
+      const b = document.createElement('button');
+      b.className = 'pat-btn' + (i === activePat ? ' active' : '');
+      b.textContent = i + 1;
+      b.onclick = () => {
+        activePat = i;
+        const statPat = document.getElementById('stat-pat');
+        if (statPat) statPat.textContent = i + 1;
+        renderPatterns();
+        if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+        renderRack();
+      };
+      c.appendChild(b);
   }
+  const addBtn = document.createElement('button');
+  addBtn.className = 'pat-btn';
+  addBtn.textContent = '+';
+  addBtn.style.color = 'var(--accent)';
+  addBtn.style.fontWeight = 'bold';
+  addBtn.title = 'Add new pattern layer';
+  addBtn.onclick = () => {
+    // Generate a new blank pattern grid
+    const newGrid = Array(MAX_ROWS).fill(null).map(() =>
+      Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
+    );
+    patterns.push(newGrid);
+
+    // Auto-switch to the newly created pattern
+    activePat = patterns.length - 1;
+    const statPat = document.getElementById('stat-pat');
+    if (statPat) statPat.textContent = activePat + 1;
+
+    renderPatterns();
+    if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+    renderRack();
+  };
+  c.appendChild(addBtn);
 }
 
 /* ════════════════════════════════════════
