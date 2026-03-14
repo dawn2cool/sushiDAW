@@ -27,7 +27,7 @@
 
 /* ─── ON STATES: food textures ─── */
 
-/* 🍚 RICE — white oval grains on cream, slightly irregular */
+/* cream cheese — white oval grains on cream, slightly irregular */
 .cell.on[data-ch="0"] {
   background:
     radial-gradient(ellipse 35% 55% at 28% 35%, rgba(255,255,255,0.9) 0%, transparent 100%),
@@ -40,7 +40,7 @@
   border-color: #C8B870 !important;
 }
 
-/* 🐟 SALMON — diagonal grain, warm pink-orange */
+/* salmon — diagonal grain, warm pink-orange */
 .cell.on[data-ch="1"] {
   background:
     repeating-linear-gradient(
@@ -54,7 +54,7 @@
   border-color: #C84030 !important;
 }
 
-/* 🔴 TUNA — deep marbled red, white fat veins */
+/* tuna — deep marbled red, white fat veins */
 .cell.on[data-ch="2"] {
   background:
     radial-gradient(ellipse 80% 30% at 20% 50%, rgba(220,180,170,0.4) 0%, transparent 100%),
@@ -65,7 +65,7 @@
   border-color: #701018 !important;
 }
 
-/* 🥑 AVOCADO — cross-section: dark seed in center, gradient flesh */
+/* avocado — cross-section: dark seed in center, gradient flesh */
 .cell.on[data-ch="3"] {
   background:
     radial-gradient(circle 4px at 50% 52%, #5A3820 0%, #7A4A28 100%),
@@ -75,7 +75,7 @@
   border-color: #2A5020 !important;
 }
 
-/* 🥒 CUCUMBER — vivid cross-section: dark green ring, seeds, pale center */
+/* cucumber — vivid cross-section: dark green ring, seeds, pale center */
 .cell.on[data-ch="4"] {
   background:
     radial-gradient(circle 2px at 35% 35%, rgba(255,255,255,0.7) 0%, transparent 100%),
@@ -89,7 +89,7 @@
   border-color: #1A5828 !important;
 }
 
-/* 🥚 EGG — yolk sun: golden oval center, white surround */
+/* egg — yolk sun: golden oval center, white surround */
 .cell.on[data-ch="5"] {
   background:
     radial-gradient(ellipse 45% 50% at 52% 55%, #FFCC22 0%, #FF9900 55%, #E07800 100%),
@@ -98,7 +98,7 @@
   border-color: #D09010 !important;
 }
 
-/* 🦐 PRAWN — warm coral with slight striped segmentation */
+/* prawn — warm coral with slight striped segmentation */
 .cell.on[data-ch="6"] {
   background:
     radial-gradient(ellipse 70% 80% at 55% 50%,
@@ -114,7 +114,7 @@
   border-color: #C03828 !important;
 }
 
-/* 🌿 SEAWEED — deep forest green with vertical fiber texture */
+/* wasabi — deep forest green with vertical fiber texture */
 .cell.on[data-ch="7"] {
   background:
     repeating-linear-gradient(
