@@ -1,141 +1,140 @@
-/*
-  ingredients.css
-  Each active cell renders as a visual of its actual food ingredient.
-  OFF state: muted hint of the food color (light).
-  ON  state: the actual ingredient texture/cross-section via CSS gradients.
-  The cell width is dynamic (18–30px) so patterns must scale.
-*/
+/* ════════════════════════════════════════
+   ingredients.css  —  SushiDAW
+   Each active .cell looks like its food.
+   OFF: muted food-tinted background.
+   ON:  illustrated cross-section via CSS.
+   ════════════════════════════════════════ */
 
-/* ─── OFF STATES: subtle tinted backgrounds ─── */
-.cell[data-ch="0"] { background: #EDE8DC; } /* Rice: cream   */
-.cell[data-ch="1"] { background: #EDD8CF; } /* Salmon: blush  */
-.cell[data-ch="2"] { background: #EACFCF; } /* Tuna: pale red  */
-.cell[data-ch="3"] { background: #D4E8D4; } /* Avocado: pale green */
-.cell[data-ch="4"] { background: #CCEADE; } /* Cucumber: light mint */
-.cell[data-ch="5"] { background: #EEE6C8; } /* Egg: pale gold  */
-.cell[data-ch="6"] { background: #EDD5C8; } /* Prawn: peachy   */
-.cell[data-ch="7"] { background: #CCDDD0; } /* Seaweed: grey-green */
+/* ─── OFF tints ─── */
+.cell[data-ch="0"] { background: #EDE8DC; } /* cream cheese: warm cream  */
+.cell[data-ch="1"] { background: #F0D8CE; } /* salmon: blush             */
+.cell[data-ch="2"] { background: #EACECE; } /* tuna: pale crimson        */
+.cell[data-ch="3"] { background: #D2E8D2; } /* avocado: pale green       */
+.cell[data-ch="4"] { background: #C8E8DE; } /* cucumber: light mint      */
+.cell[data-ch="5"] { background: #EEE8C0; } /* egg: pale gold            */
+.cell[data-ch="6"] { background: #F0D4C4; } /* prawn: peach              */
+.cell[data-ch="7"] { background: #CCE0D0; } /* wasabi: grey-green       */
 
-[data-theme="dark"] .cell[data-ch="0"] { background: #2A2520; }
-[data-theme="dark"] .cell[data-ch="1"] { background: #2E1E18; }
-[data-theme="dark"] .cell[data-ch="2"] { background: #2A1818; }
-[data-theme="dark"] .cell[data-ch="3"] { background: #182218; }
-[data-theme="dark"] .cell[data-ch="4"] { background: #15221E; }
-[data-theme="dark"] .cell[data-ch="5"] { background: #281E10; }
-[data-theme="dark"] .cell[data-ch="6"] { background: #2A1A14; }
-[data-theme="dark"] .cell[data-ch="7"] { background: #141E16; }
+[data-theme="dark"] .cell[data-ch="0"] { background: #2C2416; }
+[data-theme="dark"] .cell[data-ch="1"] { background: #2E1A12; }
+[data-theme="dark"] .cell[data-ch="2"] { background: #2A1414; }
+[data-theme="dark"] .cell[data-ch="3"] { background: #162214; }
+[data-theme="dark"] .cell[data-ch="4"] { background: #122018; }
+[data-theme="dark"] .cell[data-ch="5"] { background: #2A200E; }
+[data-theme="dark"] .cell[data-ch="6"] { background: #2A1A10; }
+[data-theme="dark"] .cell[data-ch="7"] { background: #101C12; }
 
-/* ─── ON STATES: food textures ─── */
+/* ─────────────────────────────────────────
+   ON STATES — food illustrations
+   ───────────────────────────────────────── */
 
-/* cream cheese — white oval grains on cream, slightly irregular */
+/* cream cheese — smooth white with subtle ridges */
 .cell.on[data-ch="0"] {
   background:
-    radial-gradient(ellipse 35% 55% at 28% 35%, rgba(255,255,255,0.9) 0%, transparent 100%),
-    radial-gradient(ellipse 30% 50% at 72% 68%, rgba(255,255,255,0.85) 0%, transparent 100%),
-    radial-gradient(ellipse 28% 45% at 50% 25%, rgba(255,255,255,0.75) 0%, transparent 100%),
-    radial-gradient(ellipse 25% 40% at 20% 75%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(ellipse 22% 38% at 80% 20%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    #E8D89A;
-  border-radius: 6px 5px 7px 5px !important;
-  border-color: #C8B870 !important;
+    repeating-linear-gradient(
+      12deg,
+      rgba(255,255,255,0.35) 0px, rgba(255,255,255,0.35) 3px,
+      transparent 3px, transparent 9px
+    ),
+    linear-gradient(160deg, #FFF9E8 0%, #F5E8C0 50%, #E8D898 100%);
+  border-color: #C8B060 !important;
+  border-radius: 5px 8px 6px 7px !important;
 }
 
-/* salmon — diagonal grain, warm pink-orange */
+/* salmon — diagonal streaks, warm coral-orange */
 .cell.on[data-ch="1"] {
   background:
     repeating-linear-gradient(
-      -38deg,
-      #FF9070 0px, #FF9070 2px,
-      #F06040 2px, #F06040 5px,
+      -40deg,
+      #FF9C70 0px, #FF9C70 2px,
+      #F0603C 2px, #F0603C 5px,
       #FF8060 5px, #FF8060 7px,
-      #E85038 7px, #E85038 10px
+      #E84832 7px, #E84832 10px
     );
+  border-color: #C83820 !important;
   border-radius: 5px 7px 5px 6px !important;
-  border-color: #C84030 !important;
 }
 
-/* tuna — deep marbled red, white fat veins */
+/* tuna — deep maroon, fat-vein marbling */
 .cell.on[data-ch="2"] {
   background:
-    radial-gradient(ellipse 80% 30% at 20% 50%, rgba(220,180,170,0.4) 0%, transparent 100%),
-    radial-gradient(ellipse 60% 25% at 70% 30%, rgba(220,170,160,0.35) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 20% at 55% 75%, rgba(210,160,155,0.3) 0%, transparent 100%),
-    linear-gradient(165deg, #C82040 0%, #98101C 45%, #B01828 70%, #901020 100%);
+    radial-gradient(ellipse 75% 28% at 18% 50%, rgba(230,190,180,0.45) 0%, transparent 100%),
+    radial-gradient(ellipse 55% 22% at 72% 28%, rgba(220,175,165,0.38) 0%, transparent 100%),
+    radial-gradient(ellipse 48% 18% at 55% 72%, rgba(210,165,155,0.32) 0%, transparent 100%),
+    linear-gradient(160deg, #C41E3A 0%, #940C18 45%, #AC1620 70%, #880E18 100%);
+  border-color: #680A12 !important;
   border-radius: 7px 5px 6px 7px !important;
-  border-color: #701018 !important;
 }
 
-/* avocado — cross-section: dark seed in center, gradient flesh */
+/* avocado — round cross-section: seed, cream flesh, green skin */
 .cell.on[data-ch="3"] {
   background:
     radial-gradient(circle 4px at 50% 52%, #5A3820 0%, #7A4A28 100%),
-    radial-gradient(ellipse 38% 55% at 50% 52%, #E8D890 0%, #C8B060 60%, transparent 100%),
-    radial-gradient(ellipse 80% 90% at 50% 52%, #6ABB58 0%, #4A9A3A 60%, #326028 100%);
-  border-radius: 50% 45% 50% 48% !important;
-  border-color: #2A5020 !important;
+    radial-gradient(ellipse 38% 55% at 50% 52%, #EEE098 0%, #CEC070 60%, transparent 100%),
+    radial-gradient(ellipse 82% 90% at 50% 52%, #68C858 0%, #48A838 55%, #2A6828 100%);
+  border-color: #286022 !important;
+  border-radius: 52% 46% 50% 48% !important;
 }
 
-/* cucumber — vivid cross-section: dark green ring, seeds, pale center */
+/* cucumber — round slice: outer dark green, seeds, pale flesh */
 .cell.on[data-ch="4"] {
   background:
-    radial-gradient(circle 2px at 35% 35%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(circle 2px at 65% 35%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(circle 2px at 50% 68%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(circle 2px at 25% 60%, rgba(255,255,255,0.65) 0%, transparent 100%),
-    radial-gradient(circle 2px at 75% 62%, rgba(255,255,255,0.65) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 60% at 50% 50%, #D8ECCC 0%, #A8D890 50%, transparent 100%),
-    radial-gradient(ellipse 90% 95% at 50% 50%, #5AB868 0%, #38A050 55%, #1E6832 100%);
+    radial-gradient(circle 1.8px at 34% 34%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(circle 1.8px at 66% 34%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(circle 1.8px at 50% 70%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(circle 1.8px at 24% 62%, rgba(255,255,255,0.68) 0%, transparent 100%),
+    radial-gradient(circle 1.8px at 76% 64%, rgba(255,255,255,0.68) 0%, transparent 100%),
+    radial-gradient(ellipse 52% 62% at 50% 50%, #DCF0CC 0%, #AADE8C 55%, transparent 100%),
+    radial-gradient(ellipse 92% 96% at 50% 50%, #58C068 0%, #36A850 52%, #1C6830 100%);
+  border-color: #185828 !important;
   border-radius: 50% !important;
-  border-color: #1A5828 !important;
 }
 
-/* egg — yolk sun: golden oval center, white surround */
+/* egg — classic sunny-side: white + deep gold yolk */
 .cell.on[data-ch="5"] {
   background:
-    radial-gradient(ellipse 45% 50% at 52% 55%, #FFCC22 0%, #FF9900 55%, #E07800 100%),
-    radial-gradient(ellipse 90% 90% at 50% 50%, #FFF8E8 0%, #FFF0C0 100%);
-  border-radius: 5px 6px 5px 7px !important;
-  border-color: #D09010 !important;
+    radial-gradient(ellipse 44% 48% at 52% 56%, #FFCC22 0%, #FF9900 55%, #D87800 100%),
+    radial-gradient(ellipse 94% 92% at 50% 50%, #FFFCF0 0%, #FFF4C0 100%);
+  border-color: #C09010 !important;
+  border-radius: 5px 7px 5px 6px !important;
 }
 
-/* prawn — warm coral with slight striped segmentation */
+/* prawn — segmented coral arches */
 .cell.on[data-ch="6"] {
   background:
-    radial-gradient(ellipse 70% 80% at 55% 50%,
-      rgba(255,200,180,0.5) 0%, transparent 60%),
+    radial-gradient(ellipse 72% 82% at 55% 50%, rgba(255,205,185,0.55) 0%, transparent 60%),
     repeating-linear-gradient(
-      90deg,
+      92deg,
       #F07050 0px, #F07050 3px,
-      #E05538 3px, #E05538 6px,
-      #F06848 6px, #F06848 9px,
-      #D04830 9px, #D04830 12px
+      #D84830 3px, #D84830 6px,
+      #E86040 6px, #E86040 9px,
+      #C84030 9px, #C84030 12px
     );
-  border-radius: 5px 10px 5px 10px !important;
-  border-color: #C03828 !important;
+  border-color: #B03020 !important;
+  border-radius: 4px 12px 4px 12px !important;
 }
 
-/* wasabi — deep forest green with vertical fiber texture */
+/* wasabi — deep green with fiber weave */
 .cell.on[data-ch="7"] {
   background:
     repeating-linear-gradient(
       180deg,
-      #1A5030 0px, #1A5030 3px,
-      #0E3820 3px, #0E3820 5px,
-      #1E5C36 5px, #1E5C36 8px,
-      #143020 8px, #143020 10px
+      #1A5830 0px, #1A5830 3px,
+      #0C3A1C 3px, #0C3A1C 5px,
+      #1E6438 5px, #1E6438 8px,
+      #123220 8px, #123220 10px
     ),
-    linear-gradient(90deg, rgba(30,80,50,0.6) 0%, transparent 40%, rgba(20,60,35,0.6) 100%);
-  border-radius: 4px 8px 4px 8px !important;
-  border-color: #0A2A14 !important;
+    linear-gradient(90deg, rgba(28,80,48,0.7) 0%, transparent 40%, rgba(18,60,32,0.7) 100%);
+  border-color: #082814 !important;
+  border-radius: 4px 9px 4px 9px !important;
 }
 
-/* ─── GHOST INGREDIENT HINTS (Gemini suggestions) ─── */
-/* Ghost cells show a faint version of the food texture */
-.cell.ghost[data-ch="0"] { background: rgba(232,216,154,0.20) !important; }
-.cell.ghost[data-ch="1"] { background: rgba(240,96,64,0.15) !important; }
-.cell.ghost[data-ch="2"] { background: rgba(200,32,64,0.15) !important; }
-.cell.ghost[data-ch="3"] { background: rgba(74,154,58,0.15) !important; }
-.cell.ghost[data-ch="4"] { background: rgba(90,184,104,0.15) !important; }
-.cell.ghost[data-ch="5"] { background: rgba(255,204,34,0.18) !important; }
-.cell.ghost[data-ch="6"] { background: rgba(240,112,80,0.15) !important; }
-.cell.ghost[data-ch="7"] { background: rgba(26,80,48,0.18) !important; }
+/* ─── GHOST CELL tints (Gemini suggestions) ─── */
+.cell.ghost[data-ch="0"] { background: rgba(232,216,154,0.18) !important; }
+.cell.ghost[data-ch="1"] { background: rgba(240,96,60,0.14)  !important; }
+.cell.ghost[data-ch="2"] { background: rgba(196,30,58,0.14)  !important; }
+.cell.ghost[data-ch="3"] { background: rgba(72,168,56,0.14)  !important; }
+.cell.ghost[data-ch="4"] { background: rgba(88,192,104,0.14) !important; }
+.cell.ghost[data-ch="5"] { background: rgba(255,200,34,0.16) !important; }
+.cell.ghost[data-ch="6"] { background: rgba(240,112,80,0.14) !important; }
+.cell.ghost[data-ch="7"] { background: rgba(26,88,48,0.18)   !important; }
