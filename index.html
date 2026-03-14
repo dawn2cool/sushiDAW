@@ -1,700 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>SushiDAW</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap');
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-          --bg-main: #1a1a1e;
-          --bg-panel: #222228;
-          --bg-rack: #1e1e24;
-          --bg-cell-off: #2c2c34;
-          --bg-row-alt: #20202a;
-          --border-subtle: #38383f;
-          --border-mid: #44444e;
-          --text-primary: #d8d8e0;
-          --text-dim: #6a6a7a;
-          --text-muted: #484858;
-          --accent-green: #3ddc84;
-          --accent-orange: #ff6b35;
-          --header-h: 42px;
-          --transport-h: 52px;
-          --row-h: 46px;
-          --label-w: 168px;
-          --cell-w: 30px;
-          --cell-gap: 3px;
-          --group-gap: 6px;
-        }
-
-        body {
-          background: var(--bg-main);
-          font-family: 'Rajdhani', sans-serif;
-          font-weight: 500;
-          color: var(--text-primary);
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 24px 16px 40px;
-          user-select: none;
-        }
-
-        /* ── App Window ── */
-        .window {
-          width: 100%;
-          max-width: 860px;
-          border-radius: 8px;
-          overflow: hidden;
-          border: 1px solid var(--border-mid);
-          box-shadow: 0 20px 60px #00000080, 0 0 0 1px #ffffff08 inset;
-        }
-
-        /* ── Title Bar ── */
-        .titlebar {
-          height: var(--header-h);
-          background: linear-gradient(180deg, #2e2e38 0%, #22222a 100%);
-          border-bottom: 1px solid #111118;
-          display: flex;
-          align-items: center;
-          padding: 0 12px;
-          gap: 10px;
-        }
-        .titlebar-dots { display: flex; gap: 5px; }
-        .dot {
-          width: 11px; height: 11px; border-radius: 50%;
-        }
-        .dot-r { background: #ff5f56; }
-        .dot-y { background: #ffbd2e; }
-        .dot-g { background: #27c93f; }
-        .titlebar-title {
-          font-family: 'Share Tech Mono', monospace;
-          font-size: 13px;
-          color: var(--text-dim);
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          flex: 1;
-          text-align: center;
-          margin-right: 56px;
-        }
-        .titlebar-title span { color: var(--accent-green); }
-
-        /* ── Transport Bar ── */
-        .transport {
-          height: var(--transport-h);
-          background: linear-gradient(180deg, #252530 0%, #1e1e28 100%);
-          border-bottom: 1px solid #111118;
-          display: flex;
-          align-items: center;
-          padding: 0 16px;
-          gap: 18px;
-        }
-        .transport-btns { display: flex; gap: 5px; }
-        .tbtn {
-          width: 36px; height: 30px;
-          border-radius: 4px;
-          border: 1px solid var(--border-mid);
-          background: #2a2a34;
-          cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.1s, border-color 0.1s;
-          font-size: 12px;
-          color: var(--text-dim);
-        }
-        .tbtn:hover { background: #34343e; border-color: #55555f; }
-        .tbtn.active-play { background: #1a3a24; border-color: var(--accent-green); color: var(--accent-green); }
-        .tbtn-play { font-size: 14px; }
-
-        .sep { width: 1px; height: 28px; background: var(--border-subtle); }
-
-        /* ── BPM Display ── */
-        .bpm-section { display: flex; align-items: center; gap: 8px; }
-        .bpm-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-        .bpm-display {
-          font-family: 'Share Tech Mono', monospace;
-          font-size: 22px;
-          color: var(--accent-orange);
-          background: #12121a;
-          border: 1px solid #2a2a38;
-          border-radius: 4px;
-          padding: 2px 8px;
-          min-width: 60px;
-          text-align: center;
-          letter-spacing: 1px;
-        }
-        .bpm-controls { display: flex; flex-direction: column; gap: 2px; }
-        .bpm-btn {
-          width: 18px; height: 13px;
-          background: #2a2a34;
-          border: 1px solid var(--border-mid);
-          cursor: pointer;
-          border-radius: 2px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 8px;
-          color: var(--text-dim);
-          line-height: 1;
-        }
-        .bpm-btn:hover { background: #34343e; color: var(--text-primary); }
-
-        /* ── Pattern Bar ── */
-        .pattern-section { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-        .pat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-right: 4px; }
-        .pat-btn {
-          width: 26px; height: 22px;
-          border: 1px solid var(--border-subtle);
-          background: #252530;
-          border-radius: 3px;
-          cursor: pointer;
-          font-size: 11px;
-          font-family: 'Share Tech Mono', monospace;
-          color: var(--text-muted);
-          display: flex; align-items: center; justify-content: center;
-          transition: all 0.1s;
-        }
-        .pat-btn:hover { background: #2e2e3a; color: var(--text-dim); }
-        .pat-btn.active { background: #1e2a3a; border-color: #4488cc; color: #6aacee; }
-
-        /* ── Steps header ── */
-        .rack-header {
-          height: 24px;
-          background: #18181e;
-          border-bottom: 1px solid #111118;
-          display: flex;
-          align-items: center;
-          padding-left: var(--label-w);
-        }
-        .step-nums {
-          display: flex;
-          gap: var(--cell-gap);
-        }
-        .step-group { display: flex; gap: var(--cell-gap); }
-        .step-group + .step-group { margin-left: var(--group-gap); }
-        .step-num {
-          width: var(--cell-w);
-          text-align: center;
-          font-size: 10px;
-          color: var(--text-muted);
-          font-family: 'Share Tech Mono', monospace;
-        }
-        .step-num.beat-1 { color: var(--text-dim); }
-
-        /* ── Channel Rack ── */
-        .rack { background: var(--bg-rack); }
-
-        .channel-row {
-          height: var(--row-h);
-          display: flex;
-          align-items: center;
-          border-bottom: 1px solid #16161c;
-          position: relative;
-        }
-        .channel-row:nth-child(even) { background: var(--bg-row-alt); }
-        .channel-row:hover .ch-label { background: #2a2a36; }
-
-        /* ── Channel Label ── */
-        .ch-label {
-          width: var(--label-w);
-          height: 100%;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 0 10px;
-          flex-shrink: 0;
-          border-right: 1px solid #111118;
-          background: #1c1c22;
-          position: relative;
-          transition: background 0.1s;
-        }
-        .ch-swatch {
-          width: 10px; height: 10px;
-          border-radius: 2px;
-          flex-shrink: 0;
-        }
-        .ch-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--text-primary);
-          flex: 1;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          letter-spacing: 0.5px;
-        }
-        .ch-emoji { font-size: 14px; line-height: 1; }
-        .ch-mute {
-          width: 20px; height: 16px;
-          border-radius: 2px;
-          background: #2e2e38;
-          border: 1px solid var(--border-subtle);
-          cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 8px;
-          color: var(--text-muted);
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          transition: all 0.1s;
-          font-family: 'Share Tech Mono', monospace;
-        }
-        .ch-mute:hover { border-color: var(--border-mid); color: var(--text-dim); }
-        .ch-mute.muted { background: #3a1a1a; border-color: #662222; color: #aa4444; }
-
-        /* ── Volume Knob Mini ── */
-        .ch-vol {
-          display: flex; align-items: center; gap: 3px;
-        }
-        .vol-track {
-          width: 32px; height: 4px;
-          background: #2a2a36;
-          border-radius: 2px;
-          position: relative;
-          cursor: pointer;
-        }
-        .vol-fill {
-          height: 100%;
-          border-radius: 2px;
-          transition: width 0.1s;
-        }
-        .vol-thumb {
-          position: absolute;
-          top: -4px;
-          width: 8px; height: 12px;
-          background: #c8c8d4;
-          border-radius: 1px;
-          transform: translateX(-50%);
-          cursor: ew-resize;
-          transition: background 0.1s;
-        }
-        .vol-thumb:hover { background: #ffffff; }
-
-        /* ── Steps Grid ── */
-        .ch-steps {
-          display: flex;
-          gap: var(--cell-gap);
-          padding: 0 10px;
-          align-items: center;
-        }
-        .step-group-cells { display: flex; gap: var(--cell-gap); }
-        .step-group-cells + .step-group-cells { margin-left: var(--group-gap); }
-
-        .step-cell {
-          width: var(--cell-w);
-          height: 28px;
-          border-radius: 3px;
-          background: var(--bg-cell-off);
-          border: 1px solid #353540;
-          cursor: pointer;
-          transition: transform 0.05s, filter 0.1s;
-          position: relative;
-          overflow: hidden;
-        }
-        .step-cell::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 50%);
-          border-radius: 2px;
-          pointer-events: none;
-        }
-        .step-cell:hover { filter: brightness(1.3); transform: scaleY(1.05); }
-        .step-cell.on { border-color: transparent; }
-        .step-cell.on::after { background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 60%); }
-
-        /* Playhead highlight */
-        .step-cell.playing {
-          filter: brightness(1.7) saturate(1.3);
-          transform: scaleY(1.1);
-          z-index: 1;
-        }
-        .step-cell.playing-off {
-          filter: brightness(1.2);
-        }
-
-        /* ── Status bar ── */
-        .statusbar {
-          height: 26px;
-          background: #141418;
-          border-top: 1px solid #0a0a10;
-          display: flex;
-          align-items: center;
-          padding: 0 14px;
-          gap: 20px;
-        }
-        .stat { font-size: 11px; color: var(--text-muted); font-family: 'Share Tech Mono', monospace; }
-        .stat span { color: var(--text-dim); }
-
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #111116; }
-        ::-webkit-scrollbar-thumb { background: #38383f; border-radius: 3px; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/ingredients.css" />
 </head>
 <body>
 
-<div class="window" id="app">
-
-    <!-- Title Bar -->
-    <div class="titlebar">
-        <div class="titlebar-dots">
-            <div class="dot dot-r"></div>
-            <div class="dot dot-y"></div>
-            <div class="dot dot-g"></div>
-        </div>
-        <div class="titlebar-title"><span>Sushi</span>DAW — Channel Rack</div>
+<!-- ── Topbar ── -->
+<header class="topbar">
+    <div class="logo">
+        <div class="logo-mark">🍣</div>
+        <span class="logo-word">Sushi<em>DAW</em></span>
     </div>
+    <div class="topbar-divider"></div>
+    <span class="topbar-sub">Channel Rack</span>
 
-    <!-- Transport -->
-    <div class="transport">
-        <div class="transport-btns">
-            <div class="tbtn tbtn-play" id="btn-play" onclick="togglePlay()">▶</div>
-            <div class="tbtn" id="btn-stop" onclick="stopSeq()">■</div>
-        </div>
-        <div class="sep"></div>
-        <div class="bpm-section">
-            <div class="bpm-label">BPM</div>
-            <div class="bpm-display" id="bpm-display">128</div>
-            <div class="bpm-controls">
-                <div class="bpm-btn" onclick="adjustBpm(1)">▲</div>
-                <div class="bpm-btn" onclick="adjustBpm(-1)">▼</div>
-            </div>
-        </div>
-        <div class="sep"></div>
-        <div style="display:flex;align-items:center;gap:6px;">
-            <div class="bpm-label">STEPS</div>
-            <div class="bpm-display" style="font-size:18px;min-width:44px;" id="steps-display">16</div>
-            <div class="bpm-controls">
-                <div class="bpm-btn" onclick="adjustSteps(8)">▲</div>
-                <div class="bpm-btn" onclick="adjustSteps(-8)">▼</div>
-            </div>
-        </div>
-        <div class="pattern-section">
-            <div class="pat-label">PAT</div>
-            <div id="pattern-btns"></div>
-        </div>
+    <div class="topbar-right">
+        <button class="icon-pill" id="btn-theme" onclick="UI.toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark">
+            <span id="theme-icon">☽</span>
+        </button>
+        <button class="icon-pill" id="btn-settings" onclick="UI.toggleSettings()" title="Settings" aria-label="Settings">⚙</button>
+        <button class="pill danger" onclick="App.clearAll()">Clear</button>
+        <button class="pill accent" onclick="App.randomise()">🎲 Roll</button>
     </div>
+</header>
 
-    <!-- Step Header -->
-    <div class="rack-header">
-        <div class="step-nums" id="step-header"></div>
+<!-- ── Settings drawer (Gemini key lives here, no label) ── -->
+<div class="settings-drawer" id="settings-drawer" aria-hidden="true">
+    <div class="settings-inner">
+        <label class="settings-label">Gemini key</label>
+        <input class="settings-input" id="gemini-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+        <span class="settings-hint">Used quietly in the background to suggest beats.</span>
     </div>
-
-    <!-- Channel Rack -->
-    <div class="rack" id="rack"></div>
-
-    <!-- Status Bar -->
-    <div class="statusbar">
-        <div class="stat">STEP <span id="stat-step">—</span></div>
-        <div class="stat">BAR <span id="stat-bar">1</span></div>
-        <div class="stat" id="stat-active">ACTIVE <span>0</span></div>
-    </div>
-
 </div>
 
-<script>
-    const CHANNELS = [
-      { name: "Rice",     emoji: "🍚", color: "#d4a843", bg: "#2e280e" },
-      { name: "Salmon",   emoji: "🐟", color: "#ff6b35", bg: "#2e1610" },
-      { name: "Tuna",     emoji: "🔴", color: "#e8445a", bg: "#2e1018" },
-      { name: "Avocado",  emoji: "🥑", color: "#5db85e", bg: "#112614" },
-      { name: "Cucumber", emoji: "🥒", color: "#3abdb5", bg: "#0f2624" },
-      { name: "Egg",      emoji: "🥚", color: "#e8d250", bg: "#2a2810" },
-      { name: "Prawn",    emoji: "🦐", color: "#e87a60", bg: "#2a1610" },
-      { name: "Seaweed",  emoji: "🌿", color: "#44c480", bg: "#0e2a1a" },
-    ];
+<!-- ── Transport ── -->
+<div class="transport">
+    <div class="tgroup">
+        <button class="t-btn play-btn" id="btn-play" onclick="App.togglePlay()">▶</button>
+        <button class="t-btn" onclick="App.stop()">■</button>
+    </div>
+    <div class="tdivider"></div>
+    <div class="tgroup">
+        <span class="tparam">BPM</span>
+        <div class="tnum" id="bpm-display">128</div>
+        <div class="tnudge-col">
+            <button class="tnudge" id="bpm-up" onclick="App.nudgeBpm(1)">▲</button>
+            <button class="tnudge" id="bpm-dn" onclick="App.nudgeBpm(-1)">▼</button>
+        </div>
+    </div>
+    <div class="tdivider"></div>
+    <div class="tgroup">
+        <span class="tparam">Steps</span>
+        <div class="tnum" id="steps-display">16</div>
+        <div class="tnudge-col">
+            <button class="tnudge" onclick="App.nudgeSteps(8)">▲</button>
+            <button class="tnudge" onclick="App.nudgeSteps(-8)">▼</button>
+        </div>
+    </div>
+    <div class="tdivider"></div>
+    <div class="tgroup">
+        <span class="tparam">Pat</span>
+        <div class="pat-btns" id="pat-btns"></div>
+    </div>
+    <div class="t-spacer"></div>
+    <div class="step-readout">
+        <span class="readout-label">step</span>
+        <span class="readout-val" id="r-step">—</span>
+        <span class="readout-sep">/</span>
+        <span class="readout-label">bar</span>
+        <span class="readout-val" id="r-bar">—</span>
+    </div>
+</div>
 
-    const NOTES = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+<!-- ── Step Header ── -->
+<div class="rack-area" id="rack-area">
+    <div class="rack-scroll" id="rack-scroll">
+        <div class="step-header" id="step-header"></div>
+        <div class="rack" id="rack"></div>
+    </div>
+</div>
 
-    let numSteps = 16;
-    let bpm = 128;
-    let playing = false;
-    let currentStep = -1;
-    let scheduleTimer = null;
-    let nextStepTime = 0;
-    let audioCtx = null;
-    let activePattern = 0;
+<!-- ── Status strip ── -->
+<div class="status-strip">
+    <div class="status-item">active <span id="stat-active">0</span></div>
+    <div class="status-item">pattern <span id="stat-pat">1</span></div>
+    <div class="status-item gemini-pulse" id="gemini-indicator" style="display:none">
+        <span class="gem-dot">✦</span> suggestions ready — click to accept
+    </div>
+</div>
 
-    let patterns = Array(4).fill(null).map(() =>
-      CHANNELS.map(() => Array(32).fill(false))
-    );
-    let volumes = CHANNELS.map(() => 0.8);
-    let muted = CHANNELS.map(() => false);
-
-    function getGrid() { return patterns[activePattern]; }
-
-    function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playNote(chIdx, time) {
-      if (muted[chIdx] || !audioCtx) return;
-      const vol = volumes[chIdx];
-      const freq = NOTES[chIdx];
-
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      const filter = audioCtx.createBiquadFilter();
-
-      filter.type = 'bandpass';
-      filter.frequency.value = freq * (chIdx < 4 ? 2 : 1);
-      filter.Q.value = 3;
-
-      const waveforms = ['sine','triangle','sawtooth','square','sine','triangle','sawtooth','sine'];
-      osc.type = waveforms[chIdx];
-      osc.frequency.value = freq;
-
-      gain.gain.setValueAtTime(0, time);
-      gain.gain.linearRampToValueAtTime(vol * 0.6, time + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + (chIdx < 3 ? 0.12 : 0.22));
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(time);
-      osc.stop(time + 0.3);
-    }
-
-    function scheduleAhead() {
-      if (!playing) return;
-      const lookAhead = 0.1;
-      const stepDuration = 60 / bpm / 4;
-
-      while (nextStepTime < audioCtx.currentTime + lookAhead) {
-        const step = (currentStep + 1) % numSteps;
-        currentStep = step;
-
-        getGrid().forEach((row, ch) => {
-          if (row[step]) playNote(ch, nextStepTime);
-        });
-
-        updatePlayhead(step);
-        nextStepTime += stepDuration;
-      }
-      scheduleTimer = setTimeout(scheduleAhead, 25);
-    }
-
-    let uiStep = -1;
-    function updatePlayhead(step) {
-      requestAnimationFrame(() => {
-        document.querySelectorAll('.step-cell').forEach(cell => {
-          cell.classList.remove('playing', 'playing-off');
-        });
-        document.querySelectorAll(`[data-step="${step}"]`).forEach(cell => {
-          const isOn = cell.classList.contains('on');
-          cell.classList.add(isOn ? 'playing' : 'playing-off');
-        });
-        document.getElementById('stat-step').textContent = step + 1;
-        document.getElementById('stat-bar').textContent = Math.floor(step / 4) + 1;
-        uiStep = step;
-      });
-    }
-
-    function togglePlay() {
-      initAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      playing = !playing;
-      const btn = document.getElementById('btn-play');
-
-      if (playing) {
-        currentStep = -1;
-        nextStepTime = audioCtx.currentTime;
-        btn.textContent = '⏸';
-        btn.classList.add('active-play');
-        scheduleAhead();
-      } else {
-        clearTimeout(scheduleTimer);
-        btn.textContent = '▶';
-        btn.classList.remove('active-play');
-      }
-    }
-
-    function stopSeq() {
-      playing = false;
-      clearTimeout(scheduleTimer);
-      currentStep = -1;
-      document.querySelectorAll('.step-cell').forEach(c => c.classList.remove('playing','playing-off'));
-      document.getElementById('btn-play').textContent = '▶';
-      document.getElementById('btn-play').classList.remove('active-play');
-      document.getElementById('stat-step').textContent = '—';
-      document.getElementById('stat-bar').textContent = '1';
-    }
-
-    function adjustBpm(delta) {
-      bpm = Math.max(40, Math.min(300, bpm + delta));
-      document.getElementById('bpm-display').textContent = bpm;
-    }
-
-    function adjustSteps(delta) {
-      numSteps = Math.max(8, Math.min(32, numSteps + delta));
-      document.getElementById('steps-display').textContent = numSteps;
-      renderHeader();
-      renderRack();
-    }
-
-    function renderHeader() {
-      const el = document.getElementById('step-header');
-      el.innerHTML = '';
-      const groups = numSteps / 4;
-      for (let g = 0; g < groups; g++) {
-        const grp = document.createElement('div');
-        grp.className = 'step-group';
-        for (let s = 0; s < 4; s++) {
-          const n = document.createElement('div');
-          n.className = 'step-num' + (s === 0 ? ' beat-1' : '');
-          n.textContent = (g * 4 + s + 1);
-          grp.appendChild(n);
-        }
-        el.appendChild(grp);
-      }
-    }
-
-    function renderPatterns() {
-      const c = document.getElementById('pattern-btns');
-      c.style.display = 'flex';
-      c.style.gap = '4px';
-      c.innerHTML = '';
-      for (let i = 0; i < 4; i++) {
-        const b = document.createElement('div');
-        b.className = 'pat-btn' + (i === activePattern ? ' active' : '');
-        b.textContent = i + 1;
-        b.onclick = () => { activePattern = i; renderPatterns(); renderRack(); };
-        c.appendChild(b);
-      }
-    }
-
-    function renderRack() {
-      const rack = document.getElementById('rack');
-      rack.innerHTML = '';
-      const grid = getGrid();
-
-      CHANNELS.forEach((ch, r) => {
-        const row = document.createElement('div');
-        row.className = 'channel-row';
-
-        // Label
-        const lbl = document.createElement('div');
-        lbl.className = 'ch-label';
-        lbl.innerHTML = `
-          <div class="ch-swatch" style="background:${ch.color}"></div>
-          <span class="ch-name">${ch.emoji} ${ch.name}</span>
-          <div class="ch-mute${muted[r] ? ' muted' : ''}" onclick="toggleMute(${r},this)">M</div>
-        `;
-
-        // Volume
-        const volWrap = document.createElement('div');
-        volWrap.className = 'ch-vol';
-        volWrap.style.cssText = 'padding: 0 6px; flex-shrink:0;';
-        const track = document.createElement('div');
-        track.className = 'vol-track';
-        const fill = document.createElement('div');
-        fill.className = 'vol-fill';
-        fill.style.width = (volumes[r] * 100) + '%';
-        fill.style.background = ch.color;
-        const thumb = document.createElement('div');
-        thumb.className = 'vol-thumb';
-        thumb.style.left = (volumes[r] * 100) + '%';
-        track.appendChild(fill);
-        track.appendChild(thumb);
-        volWrap.appendChild(track);
-        setupVolumeDrag(track, fill, thumb, r);
-
-        lbl.appendChild(volWrap);
-        row.appendChild(lbl);
-
-        // Steps
-        const steps = document.createElement('div');
-        steps.className = 'ch-steps';
-
-        for (let g = 0; g < numSteps / 4; g++) {
-          const grp = document.createElement('div');
-          grp.className = 'step-group-cells';
-          for (let s = 0; s < 4; s++) {
-            const idx = g * 4 + s;
-            const cell = document.createElement('div');
-            cell.className = 'step-cell' + (grid[r][idx] ? ' on' : '');
-            cell.dataset.row = r;
-            cell.dataset.step = idx;
-            if (grid[r][idx]) {
-              cell.style.background = ch.color;
-              cell.style.boxShadow = `0 0 6px ${ch.color}44`;
-            }
-            cell.onclick = () => toggleStep(r, idx, ch, cell);
-            grp.appendChild(cell);
-          }
-          steps.appendChild(grp);
-        }
-
-        row.appendChild(steps);
-        rack.appendChild(row);
-      });
-
-      updateStatActive();
-    }
-
-    function toggleStep(r, idx, ch, cell) {
-      const grid = getGrid();
-      grid[r][idx] = !grid[r][idx];
-      if (grid[r][idx]) {
-        cell.classList.add('on');
-        cell.style.background = ch.color;
-        cell.style.boxShadow = `0 0 6px ${ch.color}44`;
-        if (playing && idx === uiStep) cell.classList.add('playing');
-      } else {
-        cell.classList.remove('on');
-        cell.style.background = '';
-        cell.style.boxShadow = '';
-      }
-      updateStatActive();
-      initAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      playNote(r, audioCtx.currentTime);
-    }
-
-    function toggleMute(r, el) {
-      muted[r] = !muted[r];
-      el.classList.toggle('muted', muted[r]);
-    }
-
-    function setupVolumeDrag(track, fill, thumb, chIdx) {
-      let dragging = false;
-      const update = (e) => {
-        const rect = track.getBoundingClientRect();
-        const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
-        const pct = Math.max(0, Math.min(1, x / rect.width));
-        volumes[chIdx] = pct;
-        fill.style.width = (pct * 100) + '%';
-        thumb.style.left = (pct * 100) + '%';
-      };
-      thumb.addEventListener('mousedown', e => { e.stopPropagation(); dragging = true; });
-      track.addEventListener('mousedown', e => { dragging = true; update(e); });
-      window.addEventListener('mousemove', e => { if (dragging) update(e); });
-      window.addEventListener('mouseup', () => { dragging = false; });
-    }
-
-    function updateStatActive() {
-      const total = getGrid().flat().filter(Boolean).length;
-      const el = document.getElementById('stat-active');
-      el.innerHTML = `ACTIVE <span>${total}</span>`;
-    }
-
-    // BPM click+hold
-    let bpmHoldTimer = null;
-    document.querySelectorAll('.bpm-btn')?.forEach(b => {
-      b.addEventListener('mousedown', () => {
-        bpmHoldTimer = setInterval(() => b.click(), 80);
-      });
-      b.addEventListener('mouseup', () => clearInterval(bpmHoldTimer));
-      b.addEventListener('mouseleave', () => clearInterval(bpmHoldTimer));
-    });
-
-    // Init
-    renderHeader();
-    renderPatterns();
-    renderRack();
-</script>
+<script src="js/audio.js"></script>
+<script src="js/gemini.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
