@@ -47,7 +47,7 @@
     </div>
     <div class="tdivider"></div>
     <div class="tgroup">
-        <span class="tparam">BPM</span>
+        <span class="tparam">bpm</span>
         <div class="tnum" id="bpm-display">128</div>
         <div class="tnudge-col">
             <button class="tnudge" id="bpm-up" onclick="App.nudgeBpm(1)">▲</button>
@@ -56,7 +56,7 @@
     </div>
     <div class="tdivider"></div>
     <div class="tgroup">
-        <span class="tparam">Steps</span>
+        <span class="tparam">steps</span>
         <div class="tnum" id="steps-display">16</div>
         <div class="tnudge-col">
             <button class="tnudge" onclick="App.nudgeSteps(8)">▲</button>
@@ -65,8 +65,22 @@
     </div>
     <div class="tdivider"></div>
     <div class="tgroup">
-        <span class="tparam">Pat</span>
+        <span class="tparam">pat</span>
         <div class="pat-btns" id="pat-btns"></div>
+    </div>
+    <div class="tdivider"></div>
+    <div class="tgroup">
+        <select id="new-ingredient" class="tnum" style="font-size: 12px; padding: 4px; outline: none;">
+            <option value="salmon">salmon</option>
+            <option value="tuna">tuna</option>
+            <option value="cream cheese">cream cheese</option>
+            <option value="avocado">avocado</option>
+            <option value="cucumber">cucumber</option>
+            <option value="egg">egg</option>
+            <option value="prawn">prawn</option>
+            <option value="wasabi">wasabi</option>
+        </select>
+        <button class="pill" onclick="App.addIngredient()">+ Add Layer</button>
     </div>
     <div class="t-spacer"></div>
     <div class="step-readout">
