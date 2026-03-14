@@ -23,10 +23,14 @@ const Audio = (() => {
     if (ctx && ctx.state === 'suspended') ctx.resume();
   }
 
-  function playNote(chIdx, time, volume = 1.0) {
+  function playNote(chIdx, time, volume = 1.0, pitch = 0) {
     if (!ctx) return;
     const v = VOICES[chIdx];
     const vol = volume * v.gain;
+
+    // 1. PITCH CALCULATION
+    // Formula: Frequency = Base Frequency * 2^(semitones / 12)
+    const targetFreq = v.freq * Math.pow(2, pitch / 12);
 
     const osc   = ctx.createOscillator();
     const gain  = ctx.createGain();
@@ -34,14 +38,17 @@ const Audio = (() => {
 
     filt.type = v.filter.type;
     filt.frequency.value = v.filter.freq;
-    filt.Q.value = v.wave === 'bandpass' ? 4 : 1.5;
+    filt.Q.value = v.filter.type === 'bandpass' ? 4 : 1.5;
 
     osc.type = v.wave;
-    osc.frequency.setValueAtTime(v.freq, time);
+    
+    // Use the calculated targetFreq instead of the static v.freq
+    osc.frequency.setValueAtTime(targetFreq, time);
 
-    // Pitch envelope (kick-like drop for bass channels)
+    // 2. ADAPTIVE PITCH ENVELOPE
+    // If it's a "bass" ingredient (Rice, Avocado, Cucumber), apply a downward slide
     if (chIdx === 0 || chIdx === 3 || chIdx === 4) {
-      osc.frequency.exponentialRampToValueAtTime(v.freq * 0.3, time + v.decay * 0.6);
+      osc.frequency.exponentialRampToValueAtTime(targetFreq * 0.3, time + v.decay * 0.6);
     }
 
     gain.gain.setValueAtTime(0, time);

@@ -29,6 +29,18 @@
 </header>
 
 <!-- ══ SETTINGS DRAWER ══ -->
+<div id="piano-roll-overlay" class="hidden">
+  <div class="piano-roll-header">
+    <span>Ingredient Editor</span>
+    <button class="done-btn" onclick="closePianoRoll()">Done</button>
+  </div>
+  <div class="piano-roll-grid-container">
+    <div class="piano-keys-sidebar"></div>
+    <div id="piano-roll-grid"></div>
+  </div>
+</div>
+
+<!-- ── Settings drawer (Gemini key lives here, no label) ── -->
 <div class="settings-drawer" id="settings-drawer" aria-hidden="true">
     <div class="settings-inner">
         <label class="settings-label">Gemini key</label>

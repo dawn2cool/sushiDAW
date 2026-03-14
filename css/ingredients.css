@@ -1,20 +1,21 @@
 /* ════════════════════════════════════════
-   ingredients.css  —  SushiDAW
+   ingredients.css — SushiDAW
    Each active .cell looks like its food.
    OFF: muted food-tinted background.
    ON:  illustrated cross-section via CSS.
    ════════════════════════════════════════ */
 
 /* ─── OFF tints ─── */
-.cell[data-ch="0"] { background: #EDE8DC; } /* cream cheese: warm cream  */
-.cell[data-ch="1"] { background: #F0D8CE; } /* salmon: blush             */
-.cell[data-ch="2"] { background: #EACECE; } /* tuna: pale crimson        */
-.cell[data-ch="3"] { background: #D2E8D2; } /* avocado: pale green       */
-.cell[data-ch="4"] { background: #C8E8DE; } /* cucumber: light mint      */
-.cell[data-ch="5"] { background: #EEE8C0; } /* egg: pale gold            */
-.cell[data-ch="6"] { background: #F0D4C4; } /* prawn: peach              */
-.cell[data-ch="7"] { background: #CCE0D0; } /* wasabi: grey-green       */
+.cell[data-ch="0"] { background: #EDE8DC; } /* cream cheese */
+.cell[data-ch="1"] { background: #F0D8CE; } /* salmon */
+.cell[data-ch="2"] { background: #EACECE; } /* tuna */
+.cell[data-ch="3"] { background: #D2E8D2; } /* avocado */
+.cell[data-ch="4"] { background: #C8E8DE; } /* cucumber */
+.cell[data-ch="5"] { background: #EEE8C0; } /* egg */
+.cell[data-ch="6"] { background: #F0D4C4; } /* prawn */
+.cell[data-ch="7"] { background: #CCE0D0; } /* wasabi */
 
+/* Dark Mode Overrides */
 [data-theme="dark"] .cell[data-ch="0"] { background: #2C2416; }
 [data-theme="dark"] .cell[data-ch="1"] { background: #2E1A12; }
 [data-theme="dark"] .cell[data-ch="2"] { background: #2A1414; }
@@ -28,34 +29,24 @@
    ON STATES — food illustrations
    ───────────────────────────────────────── */
 
-/* cream cheese — smooth white with subtle ridges */
+/* Cream Cheese */
 .cell.on[data-ch="0"] {
   background:
-    repeating-linear-gradient(
-      12deg,
-      rgba(255,255,255,0.35) 0px, rgba(255,255,255,0.35) 3px,
-      transparent 3px, transparent 9px
-    ),
+    repeating-linear-gradient(12deg, rgba(255,255,255,0.35) 0px, rgba(255,255,255,0.35) 3px, transparent 3px, transparent 9px),
     linear-gradient(160deg, #FFF9E8 0%, #F5E8C0 50%, #E8D898 100%);
   border-color: #C8B060 !important;
   border-radius: 5px 8px 6px 7px !important;
 }
 
-/* salmon — diagonal streaks, warm coral-orange */
+/* Salmon */
 .cell.on[data-ch="1"] {
   background:
-    repeating-linear-gradient(
-      -40deg,
-      #FF9C70 0px, #FF9C70 2px,
-      #F0603C 2px, #F0603C 5px,
-      #FF8060 5px, #FF8060 7px,
-      #E84832 7px, #E84832 10px
-    );
+    repeating-linear-gradient(-40deg, #FF9C70 0px, #FF9C70 2px, #F0603C 2px, #F0603C 5px, #FF8060 5px, #FF8060 7px, #E84832 7px, #E84832 10px);
   border-color: #C83820 !important;
   border-radius: 5px 7px 5px 6px !important;
 }
 
-/* tuna — deep maroon, fat-vein marbling */
+/* Tuna */
 .cell.on[data-ch="2"] {
   background:
     radial-gradient(ellipse 75% 28% at 18% 50%, rgba(230,190,180,0.45) 0%, transparent 100%),
@@ -66,7 +57,7 @@
   border-radius: 7px 5px 6px 7px !important;
 }
 
-/* avocado — round cross-section: seed, cream flesh, green skin */
+/* Avocado */
 .cell.on[data-ch="3"] {
   background:
     radial-gradient(circle 4px at 50% 52%, #5A3820 0%, #7A4A28 100%),
@@ -76,21 +67,19 @@
   border-radius: 52% 46% 50% 48% !important;
 }
 
-/* cucumber — round slice: outer dark green, seeds, pale flesh */
+/* Cucumber */
 .cell.on[data-ch="4"] {
   background:
     radial-gradient(circle 1.8px at 34% 34%, rgba(255,255,255,0.75) 0%, transparent 100%),
     radial-gradient(circle 1.8px at 66% 34%, rgba(255,255,255,0.75) 0%, transparent 100%),
     radial-gradient(circle 1.8px at 50% 70%, rgba(255,255,255,0.75) 0%, transparent 100%),
-    radial-gradient(circle 1.8px at 24% 62%, rgba(255,255,255,0.68) 0%, transparent 100%),
-    radial-gradient(circle 1.8px at 76% 64%, rgba(255,255,255,0.68) 0%, transparent 100%),
     radial-gradient(ellipse 52% 62% at 50% 50%, #DCF0CC 0%, #AADE8C 55%, transparent 100%),
     radial-gradient(ellipse 92% 96% at 50% 50%, #58C068 0%, #36A850 52%, #1C6830 100%);
   border-color: #185828 !important;
   border-radius: 50% !important;
 }
 
-/* egg — classic sunny-side: white + deep gold yolk */
+/* Egg */
 .cell.on[data-ch="5"] {
   background:
     radial-gradient(ellipse 44% 48% at 52% 56%, #FFCC22 0%, #FF9900 55%, #D87800 100%),
@@ -99,42 +88,68 @@
   border-radius: 5px 7px 5px 6px !important;
 }
 
-/* prawn — segmented coral arches */
+/* Prawn */
 .cell.on[data-ch="6"] {
   background:
     radial-gradient(ellipse 72% 82% at 55% 50%, rgba(255,205,185,0.55) 0%, transparent 60%),
-    repeating-linear-gradient(
-      92deg,
-      #F07050 0px, #F07050 3px,
-      #D84830 3px, #D84830 6px,
-      #E86040 6px, #E86040 9px,
-      #C84030 9px, #C84030 12px
-    );
+    repeating-linear-gradient(92deg, #F07050 0px, #F07050 3px, #D84830 3px, #D84830 6px, #E86040 6px, #E86040 9px, #C84030 9px, #C84030 12px);
   border-color: #B03020 !important;
   border-radius: 4px 12px 4px 12px !important;
 }
 
-/* wasabi — deep green with fiber weave */
+/* Wasabi */
 .cell.on[data-ch="7"] {
   background:
-    repeating-linear-gradient(
-      180deg,
-      #1A5830 0px, #1A5830 3px,
-      #0C3A1C 3px, #0C3A1C 5px,
-      #1E6438 5px, #1E6438 8px,
-      #123220 8px, #123220 10px
-    ),
+    repeating-linear-gradient(180deg, #1A5830 0px, #1A5830 3px, #0C3A1C 3px, #0C3A1C 5px, #1E6438 5px, #1E6438 8px, #123220 8px, #123220 10px),
     linear-gradient(90deg, rgba(28,80,48,0.7) 0%, transparent 40%, rgba(18,60,32,0.7) 100%);
   border-color: #082814 !important;
   border-radius: 4px 9px 4px 9px !important;
 }
 
-/* ─── GHOST CELL tints (Gemini suggestions) ─── */
-.cell.ghost[data-ch="0"] { background: rgba(232,216,154,0.18) !important; }
-.cell.ghost[data-ch="1"] { background: rgba(240,96,60,0.14)  !important; }
-.cell.ghost[data-ch="2"] { background: rgba(196,30,58,0.14)  !important; }
-.cell.ghost[data-ch="3"] { background: rgba(72,168,56,0.14)  !important; }
-.cell.ghost[data-ch="4"] { background: rgba(88,192,104,0.14) !important; }
-.cell.ghost[data-ch="5"] { background: rgba(255,200,34,0.16) !important; }
-.cell.ghost[data-ch="6"] { background: rgba(240,112,80,0.14) !important; }
-.cell.ghost[data-ch="7"] { background: rgba(26,88,48,0.18)   !important; }
+/* ─── PIANO ROLL OVERLAY ─── */
+#piano-roll-overlay {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80vw; height: 60vh;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 3px solid #E85038; /* Salmon accent */
+    border-radius: 20px;
+    z-index: 2000;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.piano-roll-grid-container { display: flex; flex: 1; overflow: auto; }
+.piano-keys-sidebar { display: flex; flex-direction: column; background: #f8f8f8; border-right: 2px solid #ddd; }
+.piano-key { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border-bottom: 1px solid #eee; min-width: 50px; }
+.piano-key.black { background: #333; color: white; }
+
+#piano-roll-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 sub-steps */
+    grid-template-rows: repeat(12, 1fr);   /* 12 notes */
+    gap: 2px;
+    background: #e0e0e0;
+    padding: 10px;
+    flex: 1;
+}
+
+.sub-cell { background: white; border-radius: 4px; cursor: pointer; transition: background 0.1s; border: 1px solid rgba(0,0,0,0.05); }
+.sub-cell:hover { background: #fdf2f0; }
+.sub-cell.active { background: #E85038; box-shadow: inset 0 0 8px rgba(0,0,0,0.2); }
+
+.piano-roll-header { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; }
+.piano-roll-header span { font-family: 'Fredoka', sans-serif; font-weight: 600; color: #B01828; }
+.hidden { display: none !important; }
+
+/* ─── GHOST INGREDIENT HINTS ─── */
+.cell.ghost[data-ch="0"] { background: rgba(232,216,154,0.20) !important; }
+.cell.ghost[data-ch="1"] { background: rgba(240,96,64,0.15) !important; }
+.cell.ghost[data-ch="2"] { background: rgba(200,32,64,0.15) !important; }
+.cell.ghost[data-ch="3"] { background: rgba(74,154,58,0.15) !important; }
+.cell.ghost[data-ch="4"] { background: rgba(90,184,104,0.15) !important; }
+.cell.ghost[data-ch="5"] { background: rgba(255,204,34,0.18) !important; }
+.cell.ghost[data-ch="6"] { background: rgba(240,112,80,0.15) !important; }
+.cell.ghost[data-ch="7"] { background: rgba(26,80,48,0.18) !important; }
