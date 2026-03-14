@@ -1,45 +1,43 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
     <title>SushiDAW</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/base.css" />
-    <link rel="stylesheet" href="css/ingredients.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=Caveat:wght@500;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/base.css"/>
+    <link rel="stylesheet" href="css/ingredients.css"/>
+    <link rel="stylesheet" href="css/animations.css"/>
 </head>
 <body>
 
-<!-- ── Topbar ── -->
+<!-- ══ TOPBAR ══ -->
 <header class="topbar">
     <div class="logo">
-        <div class="logo-mark">🍣</div>
-        <span class="logo-word">sushi<em>DAW</em></span>
+        <div class="logo-mark wobble-hover">🍣</div>
+        <span class="logo-word">Sushi<em>DAW</em></span>
     </div>
     <div class="topbar-divider"></div>
     <span class="topbar-sub">channel rack</span>
-
     <div class="topbar-right">
-        <button class="icon-pill" id="btn-theme" onclick="UI.toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark">
-            <span id="theme-icon">☽</span>
-        </button>
-        <button class="icon-pill" id="btn-settings" onclick="UI.toggleSettings()" title="Settings" aria-label="Settings">⚙</button>
+        <button class="icon-pill wobble-hover" onclick="UI.toggleTheme()" title="Toggle theme"><span id="theme-icon">☽</span></button>
+        <button class="icon-pill wobble-hover" onclick="UI.toggleSettings()" title="Settings">⚙</button>
         <button class="pill danger" onclick="App.clearAll()">clear</button>
-        <button class="pill accent" onclick="App.randomise()">🎲 random beat</button>
+        <button class="pill accent wobble-hover" onclick="App.randomise()">🎲 random beat</button>
     </div>
 </header>
 
-<!-- ── Settings drawer (Gemini key lives here, no label) ── -->
+<!-- ══ SETTINGS DRAWER ══ -->
 <div class="settings-drawer" id="settings-drawer" aria-hidden="true">
     <div class="settings-inner">
         <label class="settings-label">Gemini key</label>
-        <input class="settings-input" id="gemini-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
-        <span class="settings-hint">Used quietly in the background to suggest beats.</span>
+        <input class="settings-input" id="gemini-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false"/>
+        <span class="settings-hint">✦ whispers beat ideas in the background</span>
     </div>
 </div>
 
-<!-- ── Transport ── -->
+<!-- ══ TRANSPORT ══ -->
 <div class="transport">
     <div class="tgroup">
         <button class="t-btn play-btn" id="btn-play" onclick="App.togglePlay()">▶</button>
@@ -68,20 +66,6 @@
         <span class="tparam">pat</span>
         <div class="pat-btns" id="pat-btns"></div>
     </div>
-    <div class="tdivider"></div>
-    <div class="tgroup">
-        <select id="new-ingredient" class="tnum" style="font-size: 12px; padding: 4px; outline: none;">
-            <option value="salmon">salmon</option>
-            <option value="tuna">tuna</option>
-            <option value="cream cheese">cream cheese</option>
-            <option value="avocado">avocado</option>
-            <option value="cucumber">cucumber</option>
-            <option value="egg">egg</option>
-            <option value="prawn">prawn</option>
-            <option value="wasabi">wasabi</option>
-        </select>
-        <button class="pill" onclick="App.addIngredient()">+ Add Layer</button>
-    </div>
     <div class="t-spacer"></div>
     <div class="step-readout">
         <span class="readout-label">step</span>
@@ -90,9 +74,13 @@
         <span class="readout-label">bar</span>
         <span class="readout-val" id="r-bar">—</span>
     </div>
+    <!-- BIG FINISH BUTTON -->
+    <button class="finish-btn" id="finish-btn" onclick="Roll.trigger()">
+        <span class="finish-stamp">🍱</span> finish roll
+    </button>
 </div>
 
-<!-- ── Step Header ── -->
+<!-- ══ RACK AREA ══ -->
 <div class="rack-area" id="rack-area">
     <div class="rack-scroll" id="rack-scroll">
         <div class="step-header" id="step-header"></div>
@@ -100,17 +88,99 @@
     </div>
 </div>
 
-<!-- ── Status strip ── -->
+<!-- ══ STATUS STRIP ══ -->
 <div class="status-strip">
     <div class="status-item">active <span id="stat-active">0</span></div>
     <div class="status-item">pattern <span id="stat-pat">1</span></div>
     <div class="status-item gemini-pulse" id="gemini-indicator" style="display:none">
-        <span class="gem-dot">✦</span> suggestions ready — click to accept
+        <span class="gem-dot">✦</span> suggestions — click ghost cells to accept
+    </div>
+</div>
+
+<!-- ══ INGREDIENT SHELF ══ -->
+<div class="ingredient-shelf">
+    <div class="shelf-heading">
+        <span class="shelf-title">ingredients</span>
+        <span class="shelf-sub">tap to add a layer ↓</span>
+    </div>
+    <div class="shelf-pills" id="shelf-pills"></div>
+
+    <!-- Decorative seaweed + rice base (purely visual, no sound) -->
+    <div class="base-graphic" aria-hidden="true">
+        <div class="base-label">your base</div>
+        <div class="base-art">
+            <!-- Seaweed SVG -->
+            <svg class="deco-seaweed" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="60" width="120" height="30" rx="4" fill="#2A5C3A"/>
+                <!-- seaweed sheet texture lines -->
+                <line x1="12" y1="60" x2="12" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <line x1="28" y1="60" x2="28" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <line x1="44" y1="60" x2="44" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <line x1="60" y1="60" x2="60" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <line x1="76" y1="60" x2="76" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <line x1="92" y1="60" x2="92" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <line x1="108" y1="60" x2="108" y2="90" stroke="#1A3C26" stroke-width="1.5"/>
+                <!-- horizontal grain -->
+                <line x1="0" y1="70" x2="120" y2="70" stroke="#3A7050" stroke-width="0.8" opacity="0.6"/>
+                <line x1="0" y1="80" x2="120" y2="80" stroke="#3A7050" stroke-width="0.8" opacity="0.6"/>
+                <!-- rice layer -->
+                <rect x="0" y="28" width="120" height="32" rx="2" fill="#F0EAD0"/>
+                <!-- rice grains -->
+                <ellipse cx="14" cy="38" rx="5" ry="3" fill="white" opacity="0.85"/>
+                <ellipse cx="30" cy="43" rx="5" ry="3" fill="white" opacity="0.80"/>
+                <ellipse cx="22" cy="50" rx="4" ry="2.5" fill="white" opacity="0.75"/>
+                <ellipse cx="48" cy="36" rx="5" ry="3" fill="white" opacity="0.85"/>
+                <ellipse cx="60" cy="47" rx="5" ry="3" fill="white" opacity="0.80"/>
+                <ellipse cx="74" cy="39" rx="4" ry="2.5" fill="white" opacity="0.75"/>
+                <ellipse cx="88" cy="44" rx="5" ry="3" fill="white" opacity="0.85"/>
+                <ellipse cx="101" cy="52" rx="4" ry="2.5" fill="white" opacity="0.75"/>
+                <ellipse cx="112" cy="36" rx="4" ry="2.5" fill="white" opacity="0.80"/>
+                <ellipse cx="38" cy="56" rx="4" ry="2.5" fill="white" opacity="0.70"/>
+                <ellipse cx="67" cy="56" rx="5" ry="3" fill="white" opacity="0.70"/>
+                <ellipse cx="95" cy="58" rx="4" ry="2.5" fill="white" opacity="0.70"/>
+                <!-- label text via Caveat style handled in CSS -->
+                <text x="60" y="18" text-anchor="middle" font-family="Caveat, cursive" font-size="13" fill="#3A7050" font-weight="700">nori + rice</text>
+                <text x="60" y="26" text-anchor="middle" font-family="Caveat, cursive" font-size="9" fill="#6A9070">(always included)</text>
+            </svg>
+
+            <!-- Right side rice bowl decoration -->
+            <svg class="deco-bowl" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="30" cy="45" rx="26" ry="8" fill="#D4C090"/>
+                <path d="M 8 32 Q 8 52 30 52 Q 52 52 52 32 Z" fill="#F0EAD0"/>
+                <ellipse cx="30" cy="32" rx="22" ry="7" fill="#E8DEC0"/>
+                <!-- grain blobs -->
+                <ellipse cx="22" cy="30" rx="4" ry="2.5" fill="white" opacity="0.9"/>
+                <ellipse cx="32" cy="28" rx="4" ry="2.5" fill="white" opacity="0.85"/>
+                <ellipse cx="40" cy="31" rx="3.5" ry="2" fill="white" opacity="0.85"/>
+                <ellipse cx="26" cy="36" rx="3.5" ry="2" fill="white" opacity="0.75"/>
+                <ellipse cx="36" cy="36" rx="3" ry="2" fill="white" opacity="0.75"/>
+                <text x="30" y="58" text-anchor="middle" font-family="Caveat, cursive" font-size="10" fill="#9A8050">rice</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- ══ SUSHI ROLL MODAL ══ -->
+<div class="roll-overlay" id="roll-overlay">
+    <div class="roll-modal" id="roll-modal">
+        <div class="roll-modal-header">
+            <span class="roll-modal-title" id="roll-modal-title">rolling your sushi…</span>
+        </div>
+        <div class="roll-stage" id="roll-stage">
+            <canvas id="roll-canvas" width="400" height="400"></canvas>
+        </div>
+        <div class="roll-modal-footer" id="roll-footer" style="display:none">
+            <div class="roll-name" id="roll-name"></div>
+            <div class="roll-ingredients" id="roll-ingredients"></div>
+            <button class="pill accent roll-close-btn" onclick="Roll.close()">🎉 eat it!</button>
+            <button class="pill" onclick="Roll.close()">back to editing</button>
+        </div>
     </div>
 </div>
 
 <script src="js/audio.js"></script>
 <script src="js/gemini.js"></script>
+<script src="js/roll.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
