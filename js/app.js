@@ -79,19 +79,32 @@ function renderHeader() {
   const el = document.getElementById('step-header');
   const cw = cellW();
   el.innerHTML = '';
+
+  // Create an inner wrapper that mirrors the padding and gaps of the channel rows
+  const headerWrapper = document.createElement('div');
+  headerWrapper.style.display = 'flex';
+  headerWrapper.style.alignItems = 'center';
+  headerWrapper.style.padding = '0 10px'; // Mirrors .ch-steps padding
+  headerWrapper.style.gap = '3px';         // Mirrors .ch-steps gap
+
   for (let g = 0; g < numSteps / 4; g++) {
     const grp = document.createElement('div');
     grp.className = 'step-grp-h';
-    if (g > 0) grp.style.marginLeft = '6px';
+    grp.style.display = 'flex';
+    grp.style.gap = '3px'; // Mirrors .step-grp gap
+    if (g > 0) grp.style.marginLeft = '6px'; // Mirrors .step-grp + .step-grp margin
+
     for (let s = 0; s < 4; s++) {
       const n = document.createElement('div');
       n.className = 'step-num' + (s === 0 ? ' beat' : '');
-      n.style.width = cw + 'px';
+      n.style.width = cw + 'px'; // Dynamics widths to match grid shrinkage
+      n.style.textAlign = 'center';
       n.textContent = g * 4 + s + 1;
       grp.appendChild(n);
     }
-    el.appendChild(grp);
+    headerWrapper.appendChild(grp);
   }
+  el.appendChild(headerWrapper);
 }
 
 /* ════════════════════════════════════════
@@ -122,7 +135,6 @@ function renderRack() {
     name.className = 'ch-name';
     name.textContent = ch.name;
 
-    // Instance badge if there are multiple of the same ingredient
     if (countInstances(ch.name) > 1) {
       const badge = document.createElement('span');
       badge.className = 'ch-instance-badge';
@@ -137,12 +149,10 @@ function renderRack() {
     muteBtn.textContent = 'M';
     muteBtn.onclick = () => { muted[r] = !muted[r]; muteBtn.classList.toggle('muted', muted[r]); };
 
-    // Remove button (only show if this is a duplicate ingredient)
     if (countInstances(ch.name) > 1) {
       const rmBtn = document.createElement('button');
       rmBtn.className = 'remove-btn';
       rmBtn.textContent = '×';
-      rmBtn.title = 'remove this layer';
       rmBtn.onclick = () => removeChannelInstance(r);
       lbl.append(muteBtn, buildVolume(r, ch), rmBtn);
     } else {
@@ -154,6 +164,9 @@ function renderRack() {
     /* ── Steps ── */
     const stepsEl = document.createElement('div');
     stepsEl.className = 'ch-steps';
+
+    // FIX: Get the base index to map CSS correctly
+    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ch.name);
 
     for (let g = 0; g < numSteps / 4; g++) {
       const grp = document.createElement('div');
@@ -168,8 +181,21 @@ function renderRack() {
         const cell = document.createElement('div');
         cell.className = 'cell' + (isOn ? ' on' : '') + (isGhost ? ' ghost' : '');
         cell.style.width  = cw + 'px';
-        cell.dataset.ch   = r;
-        cell.dataset.s    = idx;
+
+        // FIX: Map the CSS to the original ingredient type (0-7), not the row number!
+        cell.dataset.ch = baseIdx < 8 ? baseIdx : 'ai';
+        cell.dataset.s  = idx;
+
+        // Dynamic fallback colors for AI Ingredients (since they have no CSS)
+        if (baseIdx >= 8) {
+          if (isOn) {
+            cell.style.background = ch.color;
+            cell.style.borderColor = ch.color;
+          } else {
+            cell.style.background = ch.color + '22'; // Faded off state
+            cell.style.borderColor = ch.color + '11';
+          }
+        }
 
         if (isOn && uiStep === idx && playing) cell.classList.add('playing');
         cell.onclick = () => handleCellClick(r, idx, ch, cell);
@@ -190,7 +216,8 @@ function renderRack() {
    CELL CLICK
    ════════════════════════════════════════ */
 function handleCellClick(r, idx, ch, cell) {
-  const grid    = getGrid();
+  const grid = getGrid();
+  const inst = channelInstances[r];
   const isGhost = cell.classList.contains('ghost');
 
   if (isGhost) {
@@ -198,7 +225,12 @@ function handleCellClick(r, idx, ch, cell) {
     GeminiSuggest.acceptSuggestion(r, idx);
     renderRack();
     Audio.init(); Audio.resume();
-    Audio.playNote(r % INGREDIENT_DEFS.length, Audio.currentTime(), volumes[r]);
+
+    // FIX: Look up the sound based on the actual ingredient definition, not the row number
+    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+    const voiceIdx = inst.def.voiceIdx !== undefined ? inst.def.voiceIdx : baseIdx;
+
+    Audio.playNote(voiceIdx, Audio.currentTime(), volumes[r]);
     return;
   }
 
@@ -207,7 +239,12 @@ function handleCellClick(r, idx, ch, cell) {
     cell.classList.add('on', 'bounce');
     setTimeout(() => cell.classList.remove('bounce'), 150);
     Audio.init(); Audio.resume();
-    Audio.playNote(r % INGREDIENT_DEFS.length, Audio.currentTime(), volumes[r]);
+
+    // FIX: Use the same lookup logic here
+    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+    const voiceIdx = inst.def.voiceIdx !== undefined ? inst.def.voiceIdx : baseIdx;
+
+    Audio.playNote(voiceIdx, Audio.currentTime(), volumes[r]);
   } else {
     cell.classList.remove('on');
   }
@@ -385,23 +422,17 @@ function schedule() {
   const ahead = 0.1;
   const dur   = 60 / bpm / 4;
   const grid  = getGrid();
-while (nextTime < Audio.currentTime() + ahead) {
-    // Advance the step counter
+
+  while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % numSteps;
+    channelInstances.forEach((inst, r) => {
+      if (grid[r][curStep] && !muted[r]) {
+        const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+        const voiceIdx = inst.def.voiceIdx !== undefined ? inst.def.voiceIdx : baseIdx;
 
-    // Play notes from ALL patterns
-    patterns.forEach((grid) => {
-      channelInstances.forEach((inst, r) => {
-        if (grid[r][curStep] && !muted[r]) {
-          // Use custom AI voice index if it exists, otherwise use default
-          const voiceIdx = inst.def.voiceIdx !== undefined ?
-                           inst.def.voiceIdx : (r % INGREDIENT_DEFS.length);
-          Audio.playNote(voiceIdx, nextTime, volumes[r]);
-        }
-      });
+        Audio.playNote(voiceIdx, nextTime, volumes[r]);
+      }
     });
-
-    // Trigger the visual movement of the bar
     animateStep(curStep);
     nextTime += dur;
   }
