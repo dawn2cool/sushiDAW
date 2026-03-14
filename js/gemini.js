@@ -146,6 +146,10 @@ Step indices are 0-based.`;
       return;
     }
 
+    btnEl.style.opacity = "0.7";
+    btnEl.innerHTML = "<span>⏳</span> Rolling...";
+    btnEl.disabled = true;
+
     const systemInstruction = `You are a molecular gastronomy sound designer.
     The user wants to add "${description}" to their sushi DAW.
     1. Validate if it is a food/ingredient.
@@ -202,6 +206,11 @@ Step indices are 0-based.`;
     } catch (err) {
       console.error("Failed to generate ingredient:", err);
       alert("Error connecting to Gemini. Check your key and console.");
+    } finally {
+            // Restore button state
+            btnEl.style.opacity = "1";
+            btnEl.innerHTML = originalText;
+            btnEl.disabled = false;
     }
   }
 
