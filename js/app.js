@@ -28,14 +28,14 @@ function countInstances(name) {
 /* ════════════════════════════════════════
    SEQUENCER STATE
    ════════════════════════════════════════ */
-let numSteps  = 16;
-let bpm       = 128;
-let playing   = false;
-let curStep   = -1;
-let uiStep    = -1;
+let numSteps   = 16;
+let bpm        = 128;
+let playing    = false;
+let curStep    = -1;
+let uiStep     = -1;
 let schedTimer = null;
-let nextTime  = 0;
-let activePat = 0;
+let nextTime   = 0;
+let activePat  = 0;
 
 const MAX_ROWS = 100;
 const patterns = Array(4).fill(null).map(() =>
@@ -43,8 +43,8 @@ const patterns = Array(4).fill(null).map(() =>
     Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
   )
 );
-const volumes  = Array(MAX_ROWS).fill(0.75);
-const muted    = Array(MAX_ROWS).fill(false);
+const volumes    = Array(MAX_ROWS).fill(0.75);
+const muted      = Array(MAX_ROWS).fill(false);
 
 const getGrid = () => patterns[activePat];
 
@@ -179,7 +179,7 @@ function renderRack() {
         cell.onclick = () => handleCellClick(r, idx, ch, cell);
         cell.oncontextmenu = (e) => {
           e.preventDefault();
-          openPianoRoll(r, idx);
+          openPianoRoll(r); // Opens full-row editor
         };
         grp.appendChild(cell);
       }
@@ -191,19 +191,23 @@ function renderRack() {
   renderHeader();
 }
 
-/* ── PIANO ROLL LOGIC ── */
-function openPianoRoll(row, step) {
+/* ── PIANO ROLL LOGIC (1:1 FULL BAR SYNC) ── */
+function openPianoRoll(row) {
   const overlay = document.getElementById('piano-roll-overlay');
   const gridContainer = document.getElementById('piano-roll-grid');
   const sidebar = document.querySelector('.piano-keys-sidebar');
   const titleEl = overlay.querySelector('.piano-roll-header span');
   
   const ingredientName = channelInstances[row].def.name;
-  if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor`;
+  if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor (Full Bar)`;
   
   overlay.classList.remove('hidden');
   gridContainer.innerHTML = '';
   sidebar.innerHTML = '';
+
+  // Synchronize columns with the global sequence length
+  gridContainer.style.display = 'grid';
+  gridContainer.style.gridTemplateColumns = `repeat(${numSteps}, 1fr)`;
 
   const notes = ['B', 'A#', 'A', 'G#', 'G', 'F#', 'F', 'E', 'D#', 'D', 'C#', 'C'];
   notes.forEach((note, i) => {
@@ -219,37 +223,40 @@ function openPianoRoll(row, step) {
   });
 
   for (let noteIdx = 0; noteIdx < 12; noteIdx++) {
-    for (let subStep = 0; subStep < 4; subStep++) {
+    for (let s = 0; s < numSteps; s++) {
       const subCell = document.createElement('div');
       subCell.className = 'sub-cell';
-      const currentData = getGrid()[row][step];
-      if (currentData.subNotes[subStep] === (11 - noteIdx)) {
+      const currentData = getGrid()[row][s];
+      const pitch = 11 - noteIdx;
+
+      // Highlight cell if it's active AND matches this pitch
+      if (currentData.active && currentData.subNotes[0] === pitch) {
         subCell.classList.add('active');
       }
 
       subCell.onclick = () => {
-        subCell.classList.toggle('active');
-        saveSubNote(row, step, subStep, 11 - noteIdx);
         if (subCell.classList.contains('active')) {
+          subCell.classList.remove('active');
+          currentData.active = false;
+          currentData.subNotes[0] = null;
+        } else {
+          // Clear column to prevent overlapping notes in one step
+          const columnCells = gridContainer.querySelectorAll(`.sub-cell:nth-child(${numSteps}n + ${s + 1})`);
+          columnCells.forEach(c => c.classList.remove('active'));
+          
+          subCell.classList.add('active');
+          currentData.active = true;
+          currentData.subNotes[0] = pitch;
+          
+          Audio.init(); Audio.resume();
           const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ingredientName);
-          Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], 11 - noteIdx);
+          Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], pitch);
         }
+        renderRack(); // Immediate visual sync
       };
       gridContainer.appendChild(subCell);
     }
   }
-}
-
-function saveSubNote(row, step, subStep, pitch) {
-  const grid = getGrid();
-  const cell = grid[row][step];
-  if (cell.subNotes[subStep] === pitch) {
-    cell.subNotes[subStep] = null;
-  } else {
-    cell.subNotes[subStep] = pitch;
-  }
-  cell.active = cell.subNotes.some(n => n !== null);
-  renderRack();
 }
 
 function closePianoRoll() {
@@ -291,7 +298,7 @@ function handleCellClick(r, idx, ch, cell) {
   updateStatus();
 }
 
-/* ── SEQUENCER ENGINE ── */
+/* ── SEQUENCER ENGINE (CLEAN 1:1 TIMING) ── */
 function schedule() {
   if (!playing) return;
   const ahead = 0.1;
@@ -450,28 +457,26 @@ const App = {
     renderRack();
   },
   clearAll() {
-      patterns[activePat].forEach(row => row.forEach(cell => {
-          cell.active = false;
-          cell.subNotes = [null,null,null,null];
-      }));
-      renderRack();
-      updateStatus();
-    },
+    patterns[activePat].forEach(row => row.forEach(cell => {
+        cell.active = false;
+        cell.subNotes = [null,null,null,null];
+    }));
+    renderRack();
+    updateStatus();
+  },
   randomise() {
-      const grid = getGrid();
-      channelInstances.forEach((inst, r) => {
-        const defIdx = INGREDIENT_DEFS.indexOf(inst.def);
-        const threshold = defIdx === 0 ? 0.72 : defIdx < 3 ? 0.80 : 0.87;
-        for (let s = 0; s < numSteps; s++) {
-          // Randomly turn cells on/off based on the threshold
-          grid[r][s].active = Math.random() > threshold;
-          // Reset piano roll notes for randomized cells
-          grid[r][s].subNotes = [null, null, null, null];
-        }
-      });
-      if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
-      renderRack();
-      updateStatus();
+    const grid = getGrid();
+    channelInstances.forEach((inst, r) => {
+      const defIdx = INGREDIENT_DEFS.indexOf(inst.def);
+      const threshold = defIdx === 0 ? 0.72 : defIdx < 3 ? 0.80 : 0.87;
+      for (let s = 0; s < numSteps; s++) {
+        grid[r][s].active = Math.random() > threshold;
+        grid[r][s].subNotes = [null, null, null, null];
+      }
+    });
+    if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+    renderRack();
+    updateStatus();
   }
 };
 
@@ -553,19 +558,16 @@ const UI = {
    INIT
    ════════════════════════════════════════ */
 (function init() {
-  // 1. Restore Theme
   const saved = localStorage.getItem('sushidaw-theme');
   if (saved) {
     document.documentElement.dataset.theme = saved;
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
   }
 
-  // 2. Render UI
   renderPatterns();
   renderShelf();
   renderRack();
 
-  // 3. Event Listeners
   window.addEventListener('resize', () => renderRack());
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;

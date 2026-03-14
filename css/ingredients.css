@@ -128,12 +128,20 @@
 
 #piano-roll-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 sub-steps */
-    grid-template-rows: repeat(12, 1fr);   /* 12 notes */
+    /* grid-template-columns is now handled by app.js inline styles */
+    grid-template-rows: repeat(12, 1fr); 
     gap: 2px;
     background: #e0e0e0;
     padding: 10px;
     flex: 1;
+    min-width: 800px; /* Add this to ensure it scrolls if there are many steps */
+}
+
+/* Make piano roll notes match the row color */
+#piano-roll-grid .sub-cell.active {
+    background: var(--row-color, #E85038); 
+    filter: brightness(1.1);
+    border: 1px solid rgba(0,0,0,0.2);
 }
 
 .sub-cell { background: white; border-radius: 4px; cursor: pointer; transition: background 0.1s; border: 1px solid rgba(0,0,0,0.05); }
