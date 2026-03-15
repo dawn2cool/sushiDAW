@@ -158,14 +158,15 @@ const ProducerTag = (() => {
 
   // ── Public hooks — callers must await these ───────────────────
 
+  // onPlay — fires at step 0 over the beat, fire-and-forget (no blocking)
   function onPlay() {
-    if (!settings.enabled) return Promise.resolve();
+    if (!settings.enabled) return;
     if (settings.playOn === 'play' || settings.playOn === 'both') {
-      return playAndWait();
+      playAndWait(); // intentionally NOT awaited — plays over the beat
     }
-    return Promise.resolve();
   }
 
+  // onFinish — blocks the roll animation until the tag finishes speaking
   function onFinish() {
     if (!settings.enabled) return Promise.resolve();
     if (settings.playOn === 'finish' || settings.playOn === 'both') {

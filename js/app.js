@@ -38,6 +38,7 @@ window.bpm        = 128;
 let playing    = false;
 let curStep    = -1;
 let uiStep     = -1;
+let _tagFiredThisPlay = false;  // prevents tag repeating on every loop
 let schedTimer = null;
 let nextTime   = 0;
 window.activePat  = 0;
@@ -373,6 +374,12 @@ function schedule() {
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % window.numSteps;
 
+    // ── Fire producer tag at the downbeat (step 0), once per play session ──
+    if (curStep === 0 && !_tagFiredThisPlay && typeof ProducerTag !== 'undefined') {
+      _tagFiredThisPlay = true;
+      ProducerTag.onPlay(); // fire-and-forget — plays over the beat, no blocking
+    }
+
     // Iterate through all pattern layers
     window.patterns.forEach((grid) => {
       window.channelInstances.forEach((inst, r) => {
@@ -509,6 +516,7 @@ const App = {
   },
   stop() {
     playing = false;
+    _tagFiredThisPlay = false;
     clearTimeout(schedTimer);
     curStep = -1;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
@@ -701,32 +709,31 @@ App.triggerFinish = function() {
   Roll.trigger();
 };
 
-// ── togglePlay: await the producer tag BEFORE starting the sequencer ──
-// The original App.togglePlay is replaced — we call into it for stop,
-// but handle the start path ourselves so we can await the tag.
-const _origTogglePlay = App.togglePlay.bind(App);
-App.togglePlay = async function() {
-  // STOPPING — immediate, no tag
+// ── togglePlay: sequencer starts immediately, tag fires AT step 0 ──
+// The tag plays over the beat at the downbeat — not before it.
+// schedule() handles the step-0 trigger via _tagFiredThisPlay flag.
+App.togglePlay = function() {
   if (playing) {
-    _origTogglePlay();
+    // STOPPING
+    _tagFiredThisPlay = false;
+    Audio.init(); Audio.resume();
+    playing = false;
+    clearTimeout(schedTimer);
+    const btn = document.getElementById('btn-play');
+    if (btn) btn.textContent = '▶';
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
     return;
   }
 
-  // STARTING — fire tag first if configured, sequencer starts after
+  // STARTING — sequencer kicks off immediately, tag fires at step 0
+  _tagFiredThisPlay = false;
   Audio.init(); Audio.resume();
-
-  // Disable play button while tag is generating/playing
-  const playBtn = document.getElementById('btn-play');
-  if (playBtn) { playBtn.textContent = '⏳'; playBtn.disabled = true; }
-
-  if (typeof ProducerTag !== 'undefined') {
-    await ProducerTag.onPlay();  // resolves when audio ends (or instantly if not in 'play'/'both' mode)
-  }
-
-  if (playBtn) { playBtn.disabled = false; }
-
-  // Now start the sequencer
-  _origTogglePlay();
+  playing = true;
+  curStep = -1;
+  nextTime = Audio.currentTime();
+  const btn = document.getElementById('btn-play');
+  if (btn) btn.textContent = '⏸';
+  schedule();
 };
 
 /* ── UI namespace extensions ─────────────────────────────────── */
