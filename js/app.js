@@ -174,6 +174,23 @@ function renderRack() {
         cell.dataset.ch = baseIdx < 8 ? baseIdx : 'ai';
         cell.dataset.s  = idx;
 
+        if (isOn) {
+            if (baseIdx >= 8) {
+                cell.style.background = ch.color;
+                cell.style.borderColor = 'rgba(0,0,0,0.2)';
+            }
+        } else if (isGhost) {
+            if (baseIdx >= 8) {
+                cell.style.background = ch.color + '22';
+                cell.style.borderColor = ch.color + '44';
+            }
+        } else {
+            if (baseIdx >= 8) {
+                cell.style.background = ch.color + '15';
+                cell.style.borderColor = 'transparent';
+            }
+        }
+
         if (baseIdx >= 8) {
           cell.style.background = isOn ? ch.color : ch.color + '22';
           cell.style.borderColor = isOn ? ch.color : ch.color + '11';
@@ -304,6 +321,7 @@ function handleCellClick(r, idx, ch, cell) {
   const grid = getGrid();
   const cellData = grid[r][idx];
   const inst = channelInstances[r];
+  const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
 
   if (cell.classList.contains('ghost')) {
     cellData.active = true;
@@ -319,15 +337,24 @@ function handleCellClick(r, idx, ch, cell) {
   cellData.active = !cellData.active;
   if (cellData.active) {
     cell.classList.add('on', 'bounce');
-    setTimeout(() => cell.classList.remove('bounce'), 150);
-    Audio.init(); Audio.resume();
-    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
-    const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
-    Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
-  } else {
-    cellData.subNotes = [null, null, null, null];
-    cell.classList.remove('on');
-  }
+
+    if (baseIdx >= 8) {
+      cell.style.background  = ch.color;
+      cell.style.borderColor = 'rgba(0,0,0,0.2)';
+    }
+      setTimeout(() => cell.classList.remove('bounce'), 150);
+      Audio.init(); Audio.resume();
+      const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
+      Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
+    } else {
+      cellData.subNotes = [null, null, null, null];
+      cell.classList.remove('on');
+      // Reset AI ingredient cell back to its dim off-state color
+      if (baseIdx >= 8) {
+        cell.style.background  = ch.color + '22';
+        cell.style.borderColor = ch.color + '11';
+      }
+    }
 
   GeminiSuggest.clearSuggestions();
   GeminiSuggest.notify(grid, numSteps);
