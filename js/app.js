@@ -369,25 +369,31 @@ function schedule() {
   const grid = getGrid(); // This gets ONLY the currently selected pattern
 
   while (nextTime < Audio.currentTime() + ahead) {
-    curStep = (curStep + 1) % numSteps;
+      curStep = (curStep + 1) % numSteps;
 
-    // ONLY loop through the current pattern's rows
-    channelInstances.forEach((inst, r) => {
-      const cell = grid[r][curStep];
-      if (cell && cell.active && !muted[r]) {
-        const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
-        
-        // Handle melody (Piano Roll notes) or basic beat
-        if (cell.subNotes && cell.subNotes.some(n => n !== null)) {
-          const subStepDur = dur / 4;
-          cell.subNotes.forEach((p, i) => {
-            if (p !== null) Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
-          });
-        } else {
-          Audio.playNote(baseIdx, nextTime, volumes[r], 0);
-        }
-      }
-    });
+      // Iterate through EVERY pattern instead of just the active one
+      patterns.forEach((grid) => {
+        channelInstances.forEach((inst, r) => {
+          const cell = grid[r][curStep];
+
+          if (cell && cell.active && !muted[r]) {
+            // Identify the correct voice index
+            const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+            const voiceIdx = inst.def.voiceIdx !== undefined ?
+                             inst.def.voiceIdx : (baseIdx !== -1 ? baseIdx : 0);
+
+            // Handle Piano Roll melody or basic beat
+            if (cell.subNotes && cell.subNotes.some(n => n !== null)) {
+              const subStepDur = dur / 4;
+              cell.subNotes.forEach((p, i) => {
+                if (p !== null) Audio.playNote(voiceIdx, nextTime + (i * subStepDur), volumes[r], p);
+              });
+            } else {
+              Audio.playNote(voiceIdx, nextTime, volumes[r], 0);
+            }
+          }
+        });
+      });
 
     animateStep(curStep);
     nextTime += dur;
