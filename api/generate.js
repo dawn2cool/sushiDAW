@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: req.body.prompt }] }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.8,
             response_mime_type: 'application/json'
           }
         })
