@@ -32,7 +32,7 @@ Ingredient: ${description.trim()}`;
 
     try {
       // Call your Vercel serverless function proxy
-      const res = await fetch('/api/gemini', {
+      const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt })
