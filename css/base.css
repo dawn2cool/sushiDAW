@@ -8,7 +8,6 @@ input  { font-family: inherit; }
 
 :root {
   --font-pixel:   'Press Start 2P', monospace;
-  --font-display: 'Fraunces', serif;
   --font-mono:    'JetBrains Mono', monospace;
 }
 
@@ -252,7 +251,11 @@ html, body {
   flex: 1;
   transition: background 0.3s;
 }
-.rack-scroll { min-width: 480px; }
+.rack-scroll {
+    min-width: 480px;
+    display: inline-block;
+    min-width: 100%;
+}
 
 .step-header { display: flex; padding-left: var(--label-w, 148px); margin-bottom: 4px; }
 .step-grp-h { display: flex; gap: 3px; }
@@ -394,10 +397,14 @@ html, body {
 /* ════ SUSHI BASE under rack ════ */
 .rack-sushi-base {
   padding: 4px 0 14px;
+  display: inline-block;
+  min-width: 100%;
 }
 .rsb-inner {
   padding: 0 8px 0 var(--label-w, 148px);
-  display: flex; flex-direction: column; gap: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 .rsb-label {
   font-family: var(--font-pixel); font-size: 6px;
