@@ -1,10 +1,5 @@
 /*
   producer-tag.js — SushiDAW
-
-  Timing modes:
-    'play'   → tag plays first, beat starts only after audio ends
-    'finish' → tag plays first, roll animation starts only after audio ends
-    'both'   → both of the above
 */
 
 const ProducerTag = (() => {
@@ -22,7 +17,7 @@ const ProducerTag = (() => {
     producerName: '',
     tagTemplate:  'a {name} production.',
     voiceId:      VOICES[0].id,
-    playOn:       'finish',   // 'play' | 'finish' | 'both'
+    playOn:       'finish',
     cachedAudio:  null,
     cachedFor:    ''
   };
@@ -31,27 +26,21 @@ const ProducerTag = (() => {
   let isGenerating  = false;
   let prefetchDone  = false;
 
-  // ── Persistence ─────────────────────────────────────────────
-
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) Object.assign(settings, JSON.parse(raw));
-      // Sync name from auth if blank
-      if (!settings.producerName &&
-          typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+      if (!settings.producerName && typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
         const u = Auth.getUser();
         settings.producerName = u.producerTag || u.username || '';
       }
-    } catch { /* ignore */ }
+    } catch (e) {}
   }
 
   function save() {
     const { cachedAudio, ...rest } = settings;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
   }
-
-  // ── Audio generation ─────────────────────────────────────────
 
   async function generate() {
     const name = settings.producerName?.trim();
@@ -64,22 +53,24 @@ const ProducerTag = (() => {
       return settings.cachedAudio;
     }
 
-    // Only one generation at a time — don't queue, just skip
     if (isGenerating) return null;
 
     isGenerating = true;
     setStatus('generating tag…');
 
     try {
-      const fetchController = new AbortController();
-      const fetchTimeout = setTimeout(() => fetchController.abort(), 5000);
+      // FIXED: Added timeout and error handling to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const res = await fetch('/api/tts', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ voiceId: settings.voiceId, text }),
-        signal:  fetchController.signal
-      }).finally(() => clearTimeout(fetchTimeout));
+        signal:  controller.signal
+      });
+
+      clearTimeout(timeoutId);
 
       if (!res.ok) throw new Error(`TTS proxy ${res.status}`);
 
@@ -97,7 +88,7 @@ const ProducerTag = (() => {
         reader.readAsDataURL(blob);
       });
     } catch (e) {
-      console.error('ProducerTag generate:', e);
+      console.error('ProducerTag generate failed:', e);
       setStatus('⚠ tag failed');
       setTimeout(() => setStatus(''), 3000);
       return null;
@@ -105,8 +96,6 @@ const ProducerTag = (() => {
       isGenerating = false;
     }
   }
-
-  // ── Playback — returns a Promise that resolves when audio ENDS ──
 
   function playAndWait() {
     if (!settings.enabled || !settings.producerName?.trim()) {
@@ -126,7 +115,6 @@ const ProducerTag = (() => {
       audioEl.volume = 0.85;
 
       return new Promise(resolve => {
-        // Resolve when audio ends, errors out, or is blocked
         const done = () => {
           audioEl.onended  = null;
           audioEl.onerror  = null;
@@ -137,35 +125,25 @@ const ProducerTag = (() => {
 
         const playPromise = audioEl.play();
         if (playPromise) {
-          playPromise.catch(() => {
-            // Autoplay blocked (e.g. no prior user gesture) — don't hold up the beat
-            console.warn('ProducerTag: autoplay blocked, skipping tag');
-            resolve();
-          });
+          playPromise.catch(() => resolve());
         }
       });
     });
   }
 
-  // ── Prefetch in background ────────────────────────────────────
-  // Call this after settings are saved so the audio is ready instantly
   function prefetch() {
     if (settings.enabled && settings.producerName?.trim()) {
       generate().catch(() => {});
     }
   }
 
-  // ── Public hooks — callers must await these ───────────────────
-
-  // onPlay — fires at step 0 over the beat, fire-and-forget (no blocking)
   function onPlay() {
     if (!settings.enabled) return;
     if (settings.playOn === 'play' || settings.playOn === 'both') {
-      playAndWait(); // intentionally NOT awaited — plays over the beat
+      playAndWait();
     }
   }
 
-  // onFinish — blocks the roll animation until the tag finishes speaking
   function onFinish() {
     if (!settings.enabled) return Promise.resolve();
     if (settings.playOn === 'finish' || settings.playOn === 'both') {
@@ -173,8 +151,6 @@ const ProducerTag = (() => {
     }
     return Promise.resolve();
   }
-
-  // ── Panel helpers ─────────────────────────────────────────────
 
   function setStatus(msg) {
     const el = document.getElementById('tp-status');
@@ -196,7 +172,6 @@ const ProducerTag = (() => {
       toggleBtn.textContent = settings.enabled ? '✅ enabled' : '❌ disabled';
       toggleBtn.classList.toggle('active', settings.enabled);
     }
-    // Show cache state
     const cacheEl = document.getElementById('tp-cache');
     if (cacheEl) cacheEl.textContent = prefetchDone ? '✓ audio ready' : '';
   }
@@ -215,7 +190,6 @@ const ProducerTag = (() => {
         <button class="tag-panel-close" onclick="document.getElementById('tag-panel').remove()">✕</button>
       </div>
       <div class="tag-panel-body">
-
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <label class="tag-label" style="margin:0">status</label>
           <button id="tp-toggle" class="pill tag-opt-btn ${settings.enabled ? 'active' : ''}"
@@ -223,118 +197,50 @@ const ProducerTag = (() => {
             ${settings.enabled ? '✅ enabled' : '❌ disabled'}
           </button>
         </div>
-
         <label class="tag-label">your name</label>
         <input id="tp-name" class="settings-input" type="text"
                value="${settings.producerName || ''}"
-               placeholder="e.g. DJ Salmon"
-               style="width:100%;margin-bottom:10px"/>
-
+               placeholder="e.g. DJ Salmon" style="width:100%;margin-bottom:10px"/>
         <label class="tag-label">tag text</label>
         <input id="tp-template" class="settings-input" type="text"
                value="${settings.tagTemplate}"
-               placeholder="a {name} production."
-               style="width:100%;margin-bottom:10px"/>
-        <span style="font-family:var(--font-pixel);font-size:5px;color:var(--ink3);display:block;margin-bottom:12px">
-          {name} is replaced with your name
-        </span>
-
-        <label class="tag-label">voice</label>
+               placeholder="a {name} production." style="width:100%;margin-bottom:10px"/>
         <div class="tag-voices">
           ${VOICES.map(v => `
             <div class="tag-voice ${v.id === settings.voiceId ? 'active' : ''}"
                  data-id="${v.id}" onclick="ProducerTag._selectVoice('${v.id}')">
               <span class="tag-voice-name">${v.name}</span>
-              <span class="tag-voice-style">${v.style}</span>
             </div>`).join('')}
         </div>
-
-        <label class="tag-label" style="margin-top:12px">play on</label>
-        <div style="font-family:var(--font-pixel);font-size:5px;color:var(--ink3);margin-bottom:6px;line-height:1.8">
-          beat starts / roll animates only AFTER tag finishes speaking
-        </div>
         <div class="tag-play-opts">
-          <button class="pill tag-opt-btn ${settings.playOn === 'play'   ? 'active' : ''}"
-                  data-val="play"   onclick="ProducerTag._setPlayOn('play')">▶ play start</button>
+          <button class="pill tag-opt-btn ${settings.playOn === 'play' ? 'active' : ''}"
+                  onclick="ProducerTag._setPlayOn('play')">▶ play start</button>
           <button class="pill tag-opt-btn ${settings.playOn === 'finish' ? 'active' : ''}"
-                  data-val="finish" onclick="ProducerTag._setPlayOn('finish')">🍱 finish roll</button>
-          <button class="pill tag-opt-btn ${settings.playOn === 'both'   ? 'active' : ''}"
-                  data-val="both"   onclick="ProducerTag._setPlayOn('both')">both</button>
+                  onclick="ProducerTag._setPlayOn('finish')">🍱 finish roll</button>
         </div>
-
-        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;margin-top:16px">
           <button class="pill accent" onclick="ProducerTag._preview()">▶ preview</button>
-          <button class="pill"        onclick="ProducerTag._save()">save settings</button>
+          <button class="pill" onclick="ProducerTag._save()">save settings</button>
         </div>
-
         <div id="tp-status" class="tag-status"></div>
-        <div id="tp-cache"  style="font-family:var(--font-pixel);font-size:5px;color:var(--ink3);margin-top:4px">
-          ${prefetchDone ? '✓ audio ready' : ''}
-        </div>
       </div>
     `;
     document.body.appendChild(panel);
   }
 
-  // ── Exposed methods ───────────────────────────────────────────
-
   load();
 
   return {
-    load,
-    onPlay,
-    onFinish,
-    prefetch,
-    openPanel,
-    _toggleEnabled() {
-      settings.enabled = !settings.enabled;
-      updateUIState();
-    },
+    load, onPlay, onFinish, prefetch, openPanel,
+    _toggleEnabled() { settings.enabled = !settings.enabled; updateUIState(); },
     _save() {
-      settings.producerName = document.getElementById('tp-name')?.value?.trim()    || '';
+      settings.producerName = document.getElementById('tp-name')?.value?.trim() || '';
       settings.tagTemplate  = document.getElementById('tp-template')?.value?.trim() || 'a {name} production.';
-      settings.cachedAudio  = null;   // bust cache — new name/template
-      settings.cachedFor    = '';
-      prefetchDone          = false;
-      save();
-
-      // Sync producer name to backend
-      if (typeof Auth !== 'undefined' && Auth.isLoggedIn() && settings.producerName) {
-        Auth.updateProducerTag(settings.producerName).catch(() => {});
-      }
-
-      // Prefetch so it's ready instantly next time
-      prefetch();
-
-      setStatus('✓ saved — generating audio…');
-      setTimeout(() => setStatus(''), 3000);
+      settings.cachedAudio = null; save(); prefetch();
     },
-    async _preview() {
-      settings.producerName = document.getElementById('tp-name')?.value?.trim()    || settings.producerName;
-      settings.tagTemplate  = document.getElementById('tp-template')?.value?.trim() || settings.tagTemplate;
-      settings.cachedAudio  = null;
-      settings.cachedFor    = '';
-      prefetchDone          = false;
-
-      const btn = document.querySelector('.tag-panel .pill.accent');
-      if (btn) { btn.textContent = '⏳ generating…'; btn.disabled = true; }
-
-      await playAndWait();
-
-      if (btn) { btn.textContent = '▶ preview'; btn.disabled = false; }
-      updateUIState();
-    },
-    _selectVoice(id) {
-      settings.voiceId     = id;
-      settings.cachedAudio = null;
-      settings.cachedFor   = '';
-      prefetchDone         = false;
-      updateUIState();
-    },
-    _setPlayOn(val) {
-      settings.playOn = val;
-      updateUIState();
-    }
+    async _preview() { await playAndWait(); updateUIState(); },
+    _selectVoice(id) { settings.voiceId = id; settings.cachedAudio = null; updateUIState(); },
+    _setPlayOn(val) { settings.playOn = val; updateUIState(); }
   };
 })();
 

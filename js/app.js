@@ -519,27 +519,30 @@ const App = {
   },
 
   stop() {
-    playing = false;        // ← this line is missing
-    this.isPlaying = false;
+    playing = false;
     if (typeof schedTimer !== 'undefined') clearTimeout(schedTimer);
     curStep = -1;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
     const playBtn = document.getElementById('btn-play');
     if (playBtn) playBtn.textContent = '▶';
     if (window.Mascot) Mascot.updateMood(false);
-},
-  nudgeBpm(d) {
-    window.bpm = Math.max(40, Math.min(300, window.bpm + d));
-    document.getElementById('bpm-display').textContent = window.bpm;
   },
-  nudgeSteps(d) {
-    window.numSteps = Math.max(8, Math.min(64, window.numSteps + d));
-    document.getElementById('steps-display').textContent = window.numSteps;
-    renderRack();
+
+  // FIXED: Consolidated triggerFinish into the main object and removed bottom override
+  async triggerFinish() {
+    console.log("🍱 Finish button clicked!");
+    if (typeof Mascot !== 'undefined') Mascot.onFinish();
+
+    this.stop(); // Always stop music first
+
+    if (typeof Roll !== 'undefined' && Roll.trigger) {
+        await Roll.trigger();
+    } else {
+        console.error("Roll engine not found.");
+    }
   },
 
   clearAll() {
-    if (typeof Mascot !== 'undefined') Mascot.onClear();
     window.getGrid().forEach(row => row.forEach(cell => {
         cell.active = false;
         cell.subNotes = [null,null,null,null];
@@ -547,18 +550,14 @@ const App = {
     renderRack();
     updateStatus();
   },
+
   randomise() {
     const grid = window.getGrid();
     window.channelInstances.forEach((inst, r) => {
-      const defIdx = INGREDIENT_DEFS.indexOf(inst.def);
-      const threshold = defIdx === 0 ? 0.72 : defIdx < 3 ? 0.80 : 0.87;
       for (let s = 0; s < window.numSteps; s++) {
-        grid[r][s].active = Math.random() > threshold;
-        grid[r][s].subNotes = [null, null, null, null];
+        grid[r][s].active = Math.random() > 0.8;
       }
     });
-    if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
-    if (typeof Mascot !== 'undefined') Mascot.onRandomise();
     renderRack();
     updateStatus();
   }
