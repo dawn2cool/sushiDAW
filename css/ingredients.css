@@ -55,12 +55,14 @@
 
 /* Avocado */
 .cell.on[data-ch="3"] {
-  background:
-    radial-gradient(circle 4px at 50% 52%, #5A3820 0%, #7A4A28 100%),
-    radial-gradient(ellipse 38% 55% at 50% 52%, #EEE098 0%, #CEC070 60%, transparent 100%),
-    radial-gradient(ellipse 82% 90% at 50% 52%, #68C858 0%, #48A838 55%, #2A6828 100%);
-  border-color: #286022 !important;
-  border-radius: 2px !important;
+  background-image: url('../resources/avocado.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-color: #286022 !important;
+    border-radius: 2px !important;
+    background-blend-mode: multiply;
+    background-color: #3A8030;
 }
 
 /* Cucumber */
