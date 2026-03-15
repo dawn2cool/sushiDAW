@@ -64,23 +64,22 @@ const ProducerTag = (() => {
       return settings.cachedAudio;
     }
 
-    // Only one generation at a time
-    if (isGenerating) {
-      // Wait for it to finish then try cache again
-      await new Promise(r => setTimeout(r, 3500));
-      if (settings.cachedFor === cacheKey && settings.cachedAudio) return settings.cachedAudio;
-      return null;
-    }
+    // Only one generation at a time — don't queue, just skip
+    if (isGenerating) return null;
 
     isGenerating = true;
     setStatus('generating tag…');
 
     try {
+      const fetchController = new AbortController();
+      const fetchTimeout = setTimeout(() => fetchController.abort(), 5000);
+
       const res = await fetch('/api/tts', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ voiceId: settings.voiceId, text })
-      });
+        body:    JSON.stringify({ voiceId: settings.voiceId, text }),
+        signal:  fetchController.signal
+      }).finally(() => clearTimeout(fetchTimeout));
 
       if (!res.ok) throw new Error(`TTS proxy ${res.status}`);
 

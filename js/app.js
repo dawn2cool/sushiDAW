@@ -537,21 +537,7 @@ const App = {
     document.getElementById('steps-display').textContent = window.numSteps;
     renderRack();
   },
-  triggerFinish() {
-      console.log("🍱 Finish button clicked!");
 
-      // 1. Alert the mascot
-      if (typeof Mascot !== 'undefined') {
-          Mascot.onFinish(); //
-      }
-
-      // 2. Start the sushi animation sequence
-      if (typeof Roll !== 'undefined' && Roll.trigger) {
-          Roll.trigger(); // This connects to the logic in roll.js
-      } else {
-          console.error("Sushi engine (Roll) not found! Check if roll.js is loaded.");
-      }
-  },
   clearAll() {
     if (typeof Mascot !== 'undefined') Mascot.onClear();
     window.getGrid().forEach(row => row.forEach(cell => {
@@ -728,10 +714,20 @@ function initAuthUI() {
   }
 }
 
-// ── App.triggerFinish — calls ProducerTag then Roll ──────────
+// ── App.triggerFinish ────────────────────────────────────────
 App.triggerFinish = function() {
   if (typeof Mascot !== 'undefined') Mascot.onFinish();
-  Roll.trigger();
+  // Roll.trigger is async — must catch rejections or they silently swallow the animation
+  Promise.resolve()
+    .then(() => Roll.trigger())
+    .catch(err => {
+      console.error('Roll.trigger failed:', err);
+      // Recover: hide any partial overlay state
+      const overlay = document.getElementById('roll-overlay');
+      const title   = document.getElementById('roll-modal-title');
+      if (title)   title.textContent = 'something went wrong :(';
+      if (overlay) overlay.classList.remove('active');
+    });
 };
 
 // ── togglePlay: sequencer starts immediately, tag fires AT step 0 ──

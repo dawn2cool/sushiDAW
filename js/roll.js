@@ -477,39 +477,55 @@ const Roll = (() => {
 
   return {
     async trigger() {
+      // ── Collect active ingredients ──────────────────────────
       const grid = window.getGrid ? window.getGrid() : [];
       const activeIngredients = [];
 
       grid.forEach((row, r) => {
         if (row.some(c => c && c.active)) {
-          const inst = window.channelInstances[r];
+          const inst = window.channelInstances?.[r];
           if (inst) activeIngredients.push(inst.def.name);
         }
       });
 
       if (activeIngredients.length === 0) activeIngredients.push('rice');
 
+      // ── Stop sequencer ──────────────────────────────────────
       if (typeof App !== 'undefined' && App.stop) App.stop();
 
+      // ── Show overlay immediately ────────────────────────────
       const overlay = document.getElementById('roll-overlay');
       const footer  = document.getElementById('roll-footer');
       const title   = document.getElementById('roll-modal-title');
 
-      // Show overlay immediately so it feels responsive
-      footer.style.display = 'none';
-      overlay.classList.add('active');
-
-      // ── Producer tag: WAIT for it to finish speaking before animating ──
-      if (typeof ProducerTag !== 'undefined') {
-        title.textContent = '🎙 rolling...';
-        await ProducerTag.onFinish();
+      if (!overlay || !footer || !title) {
+        console.error('Roll: missing DOM elements');
+        return;
       }
 
+      footer.style.display = 'none';
+      overlay.classList.add('active');
       title.textContent = 'MAKING YOUR SUSHI...';
 
+      // ── Producer tag: fire with a hard 6s timeout so it NEVER hangs ──
+      if (typeof ProducerTag !== 'undefined') {
+        try {
+          title.textContent = '🎙 rolling...';
+          await Promise.race([
+            ProducerTag.onFinish(),
+            new Promise(resolve => setTimeout(resolve, 6000)) // hard cap
+          ]);
+        } catch (_) {
+          // Tag failed — continue to animation regardless
+        }
+        title.textContent = 'MAKING YOUR SUSHI...';
+      }
+
+      // ── Start canvas animation ──────────────────────────────
       const canvas = document.getElementById('roll-canvas');
-      const ctx    = canvas.getContext('2d');
-      const size   = Math.min(440, window.innerWidth * 0.9);
+      if (!canvas) return;
+      const ctx  = canvas.getContext('2d');
+      const size = Math.min(440, window.innerWidth * 0.9);
       canvas.width  = size;
       canvas.height = Math.round(size * 0.95);
 
