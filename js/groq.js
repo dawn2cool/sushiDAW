@@ -12,7 +12,7 @@ const GroqEngine = {
 
         try {
             // Call your internal Vercel API endpoint
-            const response = await fetch("/api/groq", {
+            const response = await fetch("/api/grok", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query: query })
