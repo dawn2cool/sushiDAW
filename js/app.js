@@ -21,6 +21,10 @@ let channelInstances = INGREDIENT_DEFS.map((def, i) => ({
 }));
 let nextId = INGREDIENT_DEFS.length;
 
+// Drag state variables
+let isDragging = false;
+let dragAction = true;
+
 function countInstances(name) {
   return channelInstances.filter(c => c.def.name === name).length;
 }
@@ -118,7 +122,6 @@ function renderRack() {
     name.className = 'ch-name';
     name.textContent = ch.name;
 
-    // Set the row accent color stripe via CSS variable
     row.style.setProperty('--row-accent', ch.color);
 
     if (countInstances(ch.name) > 1) {
@@ -174,31 +177,32 @@ function renderRack() {
         cell.dataset.ch = baseIdx < 8 ? baseIdx : 'ai';
         cell.dataset.s  = idx;
 
-        if (isOn) {
-            if (baseIdx >= 8) {
-                cell.style.background = ch.color;
-                cell.style.borderColor = 'rgba(0,0,0,0.2)';
-            }
-        } else if (isGhost) {
-            if (baseIdx >= 8) {
-                cell.style.background = ch.color + '22';
-                cell.style.borderColor = ch.color + '44';
-            }
-        } else {
-            if (baseIdx >= 8) {
-                cell.style.background = ch.color + '15';
-                cell.style.borderColor = 'transparent';
-            }
-        }
-
+        // Force AI ingredient colors
         if (baseIdx >= 8) {
-          cell.style.background = isOn ? ch.color : ch.color + '22';
-          cell.style.borderColor = isOn ? ch.color : ch.color + '11';
+          if (isOn) {
+            cell.style.background = ch.color;
+            cell.style.borderColor = 'rgba(0,0,0,0.2)';
+          } else if (isGhost) {
+            cell.style.background = ch.color + '22';
+          } else {
+            cell.style.background = ch.color + '15';
+            cell.style.borderColor = 'transparent';
+          }
         }
 
         if (isOn && uiStep === idx && playing) cell.classList.add('playing');
 
-        cell.onclick = () => handleCellClick(r, idx, ch, cell);
+        // Drag functionality
+        cell.onmousedown = (e) => {
+          isDragging = true;
+          dragAction = !cellData.active;
+          handleCellClick(r, idx, ch, cell);
+        };
+        cell.onmouseenter = () => {
+          if (isDragging && cellData.active !== dragAction) {
+            handleCellClick(r, idx, ch, cell);
+          }
+        };
         cell.oncontextmenu = (e) => {
           e.preventDefault();
           openPianoRoll(r);
@@ -223,11 +227,9 @@ function openPianoRoll(row) {
   const ingredientName = channelInstances[row].def.name;
   if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor`;
 
-  // Set ingredient color so active notes match the track
   const ingredientColor = channelInstances[row].def.color;
   overlay.style.setProperty('--row-color', ingredientColor);
 
-  // Inject Clear button next to Done (once), rewire onclick each open
   const header = overlay.querySelector('.piano-roll-header');
   let clearBtn = header && header.querySelector('.clear-roll-btn');
   if (header && !clearBtn) {
@@ -258,7 +260,6 @@ function openPianoRoll(row) {
   gridContainer.innerHTML = '';
   sidebar.innerHTML = '';
 
-  // Synchronize columns with the global sequence length
   gridContainer.style.display = 'grid';
   gridContainer.style.gridTemplateColumns = `repeat(${numSteps}, 1fr)`;
 
@@ -282,7 +283,6 @@ function openPianoRoll(row) {
       const currentData = getGrid()[row][s];
       const pitch = 11 - noteIdx;
 
-      // Highlight cell if it's active AND matches this pitch
       if (currentData.active && currentData.subNotes[0] === pitch) {
         subCell.classList.add('active');
       }
@@ -293,7 +293,6 @@ function openPianoRoll(row) {
           currentData.active = false;
           currentData.subNotes[0] = null;
         } else {
-          // Clear column to prevent overlapping notes in one step
           const columnCells = gridContainer.querySelectorAll(`.sub-cell:nth-child(${numSteps}n + ${s + 1})`);
           columnCells.forEach(c => c.classList.remove('active'));
 
@@ -328,7 +327,6 @@ function handleCellClick(r, idx, ch, cell) {
     GeminiSuggest.acceptSuggestion(r, idx);
     renderRack();
     Audio.init(); Audio.resume();
-    const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
     const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
     Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
     return;
@@ -338,62 +336,60 @@ function handleCellClick(r, idx, ch, cell) {
   if (cellData.active) {
     cell.classList.add('on', 'bounce');
 
+    // Apply AI color on manual click
     if (baseIdx >= 8) {
       cell.style.background  = ch.color;
       cell.style.borderColor = 'rgba(0,0,0,0.2)';
     }
-      setTimeout(() => cell.classList.remove('bounce'), 150);
-      Audio.init(); Audio.resume();
-      const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
-      Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
-    } else {
-      cellData.subNotes = [null, null, null, null];
-      cell.classList.remove('on');
-      // Reset AI ingredient cell back to its dim off-state color
-      if (baseIdx >= 8) {
-        cell.style.background  = ch.color + '22';
-        cell.style.borderColor = ch.color + '11';
-      }
+    setTimeout(() => cell.classList.remove('bounce'), 150);
+    Audio.init(); Audio.resume();
+    const p = (cellData.subNotes && cellData.subNotes[0] !== null) ? cellData.subNotes[0] : 0;
+    Audio.playNote(baseIdx, Audio.currentTime(), volumes[r], p);
+  } else {
+    cellData.subNotes = [null, null, null, null];
+    cell.classList.remove('on');
+    // Reset AI color
+    if (baseIdx >= 8) {
+      cell.style.background  = ch.color + '15';
+      cell.style.borderColor = 'transparent';
     }
+  }
 
-  GeminiSuggest.clearSuggestions();
-  GeminiSuggest.notify(grid, numSteps);
+  if (typeof GeminiSuggest !== 'undefined') {
+    GeminiSuggest.clearSuggestions();
+    GeminiSuggest.notify(grid, numSteps);
+  }
   updateStatus();
 }
 
-/* ── SEQUENCER ENGINE (CLEAN 1:1 TIMING) ── */
+/* ── SEQUENCER ENGINE (MULTI-PATTERN PLAYBACK) ── */
 function schedule() {
   if (!playing) return;
   const ahead = 0.1;
   const dur = 60 / bpm / 4;
-  const grid = getGrid(); // This gets ONLY the currently selected pattern
 
   while (nextTime < Audio.currentTime() + ahead) {
-      curStep = (curStep + 1) % numSteps;
+    curStep = (curStep + 1) % numSteps;
 
-      // Iterate through EVERY pattern instead of just the active one
-      patterns.forEach((grid) => {
-        channelInstances.forEach((inst, r) => {
-          const cell = grid[r][curStep];
+    // Iterate through all pattern layers
+    patterns.forEach((grid) => {
+      channelInstances.forEach((inst, r) => {
+        const cell = grid[r][curStep];
+        if (cell && cell.active && !muted[r]) {
+          const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+          const voiceIdx = inst.def.voiceIdx !== undefined ? inst.def.voiceIdx : baseIdx;
 
-          if (cell && cell.active && !muted[r]) {
-            // Identify the correct voice index
-            const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
-            const voiceIdx = inst.def.voiceIdx !== undefined ?
-                             inst.def.voiceIdx : (baseIdx !== -1 ? baseIdx : 0);
-
-            // Handle Piano Roll melody or basic beat
-            if (cell.subNotes && cell.subNotes.some(n => n !== null)) {
-              const subStepDur = dur / 4;
-              cell.subNotes.forEach((p, i) => {
-                if (p !== null) Audio.playNote(voiceIdx, nextTime + (i * subStepDur), volumes[r], p);
-              });
-            } else {
-              Audio.playNote(voiceIdx, nextTime, volumes[r], 0);
-            }
+          if (cell.subNotes && cell.subNotes.some(n => n !== null)) {
+            const subStepDur = dur / 4;
+            cell.subNotes.forEach((p, i) => {
+              if (p !== null) Audio.playNote(voiceIdx, nextTime + (i * subStepDur), volumes[r], p);
+            });
+          } else {
+            Audio.playNote(voiceIdx, nextTime, volumes[r], 0);
           }
-        });
+        }
       });
+    });
 
     animateStep(curStep);
     nextTime += dur;
@@ -403,34 +399,12 @@ function schedule() {
 
 function animateStep(s) {
   requestAnimationFrame(() => {
-    // 1. Remove highlight from EVERY cell first
-    document.querySelectorAll('.cell').forEach(c => {
-        c.classList.remove('playing', 'playing-off');
-    });
-
-    // 2. Find cells in the current step
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing', 'playing-off'));
     const activeColumn = document.querySelectorAll(`.cell[data-s="${s}"]`);
-    
     activeColumn.forEach(c => {
-      if (c.classList.contains('on')) {
-        c.classList.add('playing'); // Bright flash for active notes
-      } else {
-        c.classList.add('playing-off'); // Subtle highlight for empty slots
-      }
+      if (c.classList.contains('on')) c.classList.add('playing');
+      else c.classList.add('playing-off');
     });
-
-    // 3. Auto-scroll logic (keeps the needle in view)
-    if (playing && activeColumn.length > 0) {
-      const firstCell = activeColumn[0];
-      const scrollContainer = document.getElementById('rack-scroll');
-      const rect = firstCell.getBoundingClientRect();
-      const containerRect = scrollContainer.getBoundingClientRect();
-
-      if (rect.right > containerRect.right - 50 || rect.left < containerRect.left + 50) {
-        firstCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-    }
-
     uiStep = s;
   });
 }
@@ -476,20 +450,20 @@ function addChannelInstance(def) {
     if (channelInstances[i].def.name === def.name) { insertIdx = i + 1; break; }
   }
   channelInstances.splice(insertIdx, 0, newInst);
-    for (let p = 0; p < patterns.length; p++) {
-      patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
-    }
-    volumes.splice(insertIdx, 0, 0.75);
-    muted.splice(insertIdx, 0, false);
-    renderShelf();
-    renderRack();
+  for (let p = 0; p < patterns.length; p++) {
+    patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
+  }
+  volumes.splice(insertIdx, 0, 0.75);
+  muted.splice(insertIdx, 0, false);
+  renderShelf();
+  renderRack();
 }
 
 function removeChannelInstance(rowIdx) {
   if (channelInstances.length <= 1) return;
   channelInstances.splice(rowIdx, 1);
   for (let p = 0; p < patterns.length; p++) {
-        patterns[p].splice(rowIdx, 1);
+    patterns[p].splice(rowIdx, 1);
   }
   volumes.splice(rowIdx, 1);
   muted.splice(rowIdx, 1);
@@ -515,51 +489,12 @@ function renderShelf() {
   });
 }
 
-/* ── MASCOT LOGIC ── */
-const Mascot = {
-  // We'll initialize these inside the init function
-  el: null,
-  sprite: null,
-
-  init() {
-    this.el = document.getElementById('mascot-bubble');
-    this.sprite = document.getElementById('mascot-sprite');
-  },
-
-  say(text, duration = 3000) {
-    if (!this.el) return;
-    this.el.textContent = text;
-    this.el.parentElement.classList.add('talking');
-    
-    // Auto-hide bubble after duration
-    setTimeout(() => {
-      this.el.parentElement.classList.remove('talking');
-    }, duration);
-  },
-
-  updateMood(isPlaying) {
-    if (!this.sprite) return;
-
-    // Use .png for both since that's what your file is!
-    const imgUrl = isPlaying ? "mascot_right.jpg" : "mascot_left.png";
-    
-    this.sprite.style.backgroundImage = `url('${imgUrl}')`;
-
-    if (isPlaying) {
-      this.say("Cooking up some fire beats!");
-    } else {
-      this.say("Ready to roll?");
-    }
-  }
-};
-
 /* ── TRANSPORT ── */
 const App = {
   togglePlay() {
     Audio.init(); Audio.resume();
     playing = !playing;
     const btn = document.getElementById('btn-play');
-    Mascot.updateMood(playing);
     if (playing) {
       curStep = -1;
       nextTime = Audio.currentTime();
@@ -633,8 +568,6 @@ function renderPatterns() {
       b.textContent = i + 1;
       b.onclick = () => {
         activePat = i;
-        const statPat = document.getElementById('stat-pat');
-        if (statPat) statPat.textContent = i + 1;
         renderPatterns();
         if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
         renderRack();
@@ -652,11 +585,7 @@ function renderPatterns() {
       Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
     );
     patterns.push(newGrid);
-
     activePat = patterns.length - 1;
-    const statPat = document.getElementById('stat-pat');
-    if (statPat) statPat.textContent = activePat + 1;
-
     renderPatterns();
     if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
     renderRack();
@@ -665,7 +594,7 @@ function renderPatterns() {
 }
 
 /* ════════════════════════════════════════
-   THEME / SETTINGS
+   THEME
    ════════════════════════════════════════ */
 const UI = {
   toggleTheme() {
@@ -674,11 +603,6 @@ const UI = {
     html.dataset.theme = next;
     document.getElementById('theme-icon').textContent = next === 'dark' ? '☀' : '☽';
     localStorage.setItem('sushidaw-theme', next);
-  },
-  toggleSettings() {
-    const d = document.getElementById('settings-drawer');
-    d.classList.toggle('open');
-    d.setAttribute('aria-hidden', d.classList.contains('open') ? 'false' : 'true');
   }
 };
 
@@ -687,15 +611,16 @@ const UI = {
    ════════════════════════════════════════ */
 (function init() {
   const saved = localStorage.getItem('sushidaw-theme');
-  Mascot.init();
-  Mascot.updateMood(false); // ← add this line
   if (saved) {
     document.documentElement.dataset.theme = saved;
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
   }
+
   renderPatterns();
   renderShelf();
   renderRack();
+
+  window.addEventListener('mouseup', () => { isDragging = false; }); // Global mouseup
   window.addEventListener('resize', () => renderRack());
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
