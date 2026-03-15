@@ -4,14 +4,14 @@
    ════════════════════════════════════════ */
 
 const INGREDIENT_DEFS = [
-  { name:'cream cheese',  color:'#C8A840' },
-  { name:'salmon',        color:'#E85038' },
-  { name:'tuna',          color:'#B01828' },
-  { name:'avocado',       color:'#3A8030' },
-  { name:'cucumber',      color:'#1A9058' },
-  { name:'egg',           color:'#D09010' },
-  { name:'prawn',         color:'#C84028' },
-  { name:'wasabi',        color:'#1A5030' },
+  { name:'cream cheese', color:'#C8A840' },
+  { name:'salmon', color:'#E85038' },
+  { name:'tuna', color:'#B01828' },
+  { name:'avocado', color:'#3A8030' },
+  { name:'cucumber', color:'#1A9058' },
+  { name:'egg', color:'#D09010' },
+  { name:'prawn', color:'#C84028' },
+  { name:'wasabi', color:'#1A5030' },
 ];
 
 let channelInstances = INGREDIENT_DEFS.map((def, i) => ({
@@ -489,66 +489,6 @@ function renderShelf() {
   });
 }
 
-/* ── MASCOT LOGIC ── */
-/* ── MASCOT LOGIC ── */
-const Mascot = {
-  el: null,
-  sprite: null,
-  idlePhrases: [
-    "tip: Click an ingredient to change the sound !", 
-    "tip: Use the BPM slider to speed up !", 
-    "tip: click and drag notes to duplicate !"
-
-  ],
-  playingPhrases: [
-    "ready to roll !", 
-    "yes chef !", 
-    "fresh as hell !",
-    "sick beat !",
-    "that shit is dope !",
-    "what the fuck IS indie ?!"
-  ],
-
-  init() {
-    this.el = document.getElementById('mascot-bubble');
-    this.sprite = document.getElementById('mascot-sprite');
-    
-    // Start talking immediately
-    this.updateMood(false); 
-    
-    // START THE 10-SECOND CYCLE
-    this.startSpeechCycle();
-  },
-
-  startSpeechCycle() {
-    if (this.cycle) clearInterval(this.cycle);
-    this.cycle = setInterval(() => {
-        this.el.classList.remove('show');
-        setTimeout(() => {
-            const phrases = playing ? this.playingPhrases : this.idlePhrases; // ← was Sequencer.isPlaying
-            this.el.textContent = phrases[Math.floor(Math.random() * phrases.length)];
-            this.el.classList.add('show');
-        }, 1000);
-    }, 10000);
-},
-
-  updateMood(isPlaying) {
-    if (!this.sprite) return;
-    
-    // Path check: ../ because app.js is in /js/ folder
-    const imgUrl = isPlaying ? "../mascot_right.jpg" : "../mascot_left.png";
-    this.sprite.style.backgroundImage = `url('${imgUrl}')`;
-
-    // Make bubble pop up immediately when you hit play/stop
-    this.el.classList.remove('show');
-    setTimeout(() => {
-      const phrases = isPlaying ? this.playingPhrases : this.idlePhrases;
-      this.el.textContent = phrases[Math.floor(Math.random() * phrases.length)];
-      this.el.classList.add('show');
-    }, 200);
-  }
-};
-
 /* ── TRANSPORT ── */
 const App = {
   togglePlay() {
@@ -565,17 +505,13 @@ const App = {
       btn.textContent = '▶';
     }
   },
-
   stop() {
-    playing = false;        // ← this line is missing
-    this.isPlaying = false;
-    if (typeof schedTimer !== 'undefined') clearTimeout(schedTimer);
+    playing = false;
+    clearTimeout(schedTimer);
     curStep = -1;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
-    const playBtn = document.getElementById('btn-play');
-    if (playBtn) playBtn.textContent = '▶';
-    if (window.Mascot) Mascot.updateMood(false);
-},
+    document.getElementById('btn-play').textContent = '▶';
+  },
   nudgeBpm(d) {
     bpm = Math.max(40, Math.min(300, bpm + d));
     document.getElementById('bpm-display').textContent = bpm;
@@ -675,18 +611,40 @@ const UI = {
    ════════════════════════════════════════ */
 (function init() {
   const saved = localStorage.getItem('sushidaw-theme');
-  Mascot.init();
   if (saved) {
     document.documentElement.dataset.theme = saved;
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
+  }
+
+  // ── Load Custom AI Ingredients from Storage ──
+  try {
+    const customIngs = JSON.parse(localStorage.getItem('sushidaw_custom_ingredients') || '[]');
+    customIngs.forEach(ing => {
+      // Re-register the synthesizer voice to get a valid voiceIdx in the audio engine
+      const voiceIdx = (typeof Audio !== 'undefined' && Audio.addDynamicVoice)
+                       ? Audio.addDynamicVoice(ing.synth)
+                       : INGREDIENT_DEFS.length; // fallback
+
+      // Push it back into the global shelf array
+      INGREDIENT_DEFS.push({
+        name: ing.name,
+        color: ing.color,
+        emoji: ing.emoji || '✨',
+        voiceIdx: voiceIdx
+      });
+    });
+  } catch (e) {
+    console.error("Failed to load custom ingredients", e);
   }
 
   renderPatterns();
   renderShelf();
   renderRack();
 
-  window.addEventListener('mouseup', () => { isDragging = false; }); // Global mouseup
+  window.addEventListener('mouseup', () => { isDragging = false; });
   window.addEventListener('resize', () => renderRack());
+  // Auth UI bootstrap — runs after DOM is fully set up
+  if (typeof initAuthUI === 'function') initAuthUI();
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Escape') closePianoRoll();
@@ -696,3 +654,281 @@ const UI = {
     }
   });
 })();
+
+/* ════════════════════════════════════════
+   AUTH + SAVE/HISTORY UI  —  Added features
+   ════════════════════════════════════════ */
+
+// ── Wire up auth UI on page load ─────────────────────────────
+function initAuthUI() {
+  if (typeof Auth === 'undefined') return;
+  const user = Auth.getUser();
+  if (user) {
+    const pill = document.getElementById('user-pill');
+    const name = document.getElementById('user-pill-name');
+    if (pill) pill.style.display = 'flex';
+    if (name) name.textContent   = user.producerTag || user.username;
+
+    // Show save + history buttons
+    const saveBtn        = document.getElementById('save-btn');
+    const historyBtn     = document.getElementById('history-btn');
+    const beatHistoryBtn = document.getElementById('beat-history-btn');
+    if (saveBtn)        saveBtn.style.display        = 'flex';
+    if (historyBtn)     historyBtn.style.display     = 'flex';
+    if (beatHistoryBtn) beatHistoryBtn.style.display = 'flex';
+
+    // Sync producer tag name
+    if (typeof ProducerTag !== 'undefined') {
+      ProducerTag.load();
+    }
+  } else {
+    // Show the login button if the user is a guest
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) loginBtn.style.display = 'block';
+  }
+}
+
+// ── App.triggerFinish — calls ProducerTag then Roll ──────────
+App.triggerFinish = function() {
+  Roll.trigger();
+};
+
+// ── Extend App.togglePlay to fire producer tag ───────────────
+const _origTogglePlay = App.togglePlay.bind(App);
+App.togglePlay = function() {
+  const wasPlaying = playing;
+  _origTogglePlay();
+  if (!wasPlaying && typeof ProducerTag !== 'undefined') ProducerTag.onPlay();
+};
+
+/* ── UI namespace extensions ─────────────────────────────────── */
+Object.assign(UI, {
+
+  // ── Save beat modal ───────────────────────────────────────
+  saveBeat() {
+    if (!Auth.isLoggedIn()) {
+      if(confirm('You need to log in to save beats. Go to login screen?')) {
+        window.location.href = 'login.html';
+      }
+      return;
+    }
+    const overlay = document.getElementById('save-overlay');
+    if (overlay) overlay.style.display = 'flex';
+    const input = document.getElementById('save-name-input');
+    if (input) { input.value = ''; input.focus(); }
+    document.getElementById('save-status').textContent = '';
+  },
+
+  closeSave(e) {
+    if (e && e.target !== document.getElementById('save-overlay')) return;
+    document.getElementById('save-overlay').style.display = 'none';
+  },
+
+  async confirmSave() {
+    const name   = (document.getElementById('save-name-input').value.trim()) || 'untitled beat';
+    const status = document.getElementById('save-status');
+    status.textContent = '⏳ saving...';
+    try {
+      const id = await DB.saveBeat(name);
+      window._lastSavedBeatId = id;
+      status.textContent = '✓ saved!';
+      setTimeout(() => {
+        document.getElementById('save-overlay').style.display = 'none';
+        status.textContent = '';
+      }, 1200);
+    } catch (e) {
+      status.textContent = '✗ ' + (e.message || 'save failed');
+    }
+  },
+
+  // ── Beat history modal & Loading ─────────────────────────
+  async openBeatHistory() {
+    if (!Auth.isLoggedIn()) {
+      if(confirm('You need to log in to see your beats. Go to login screen?')) {
+        window.location.href = 'login.html';
+      }
+      return;
+    }
+    const overlay = document.getElementById('beat-history-overlay');
+    const body    = document.getElementById('beat-history-body');
+    if (!overlay) return;
+
+    overlay.style.display = 'flex';
+    body.innerHTML = '<div class="history-loading">loading...</div>';
+
+    try {
+      const beats = await DB.listBeats();
+      if (!beats.length) {
+        body.innerHTML = '<div class="history-empty">no beats yet!<br>save your first track 💾</div>';
+        return;
+      }
+      body.innerHTML = '';
+      beats.forEach(beat => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.style.cursor = 'pointer';
+
+        const date  = new Date(beat.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'2-digit' });
+
+        card.innerHTML = `
+          <div class="hc-info" onclick="UI.loadBeat('${beat.id}', this)" style="flex-grow: 1;">
+            <div class="hc-name">${beat.name}</div>
+            <div class="hc-label">${beat.bpm} BPM • ${beat.numSteps} Steps</div>
+            <div class="hc-date">${date}</div>
+          </div>
+          <button class="hc-delete" onclick="UI._deleteBeat('${beat.id}', this); event.stopPropagation();" title="delete">✕</button>
+        `;
+        body.appendChild(card);
+      });
+    } catch (e) {
+      body.innerHTML = `<div class="history-empty">error loading beats<br><small>${e.message}</small></div>`;
+    }
+  },
+
+  closeBeatHistory(e) {
+    const overlay = document.getElementById('beat-history-overlay');
+    if (e && e.target !== overlay) return;
+    if (overlay) overlay.style.display = 'none';
+  },
+
+  async _deleteBeat(id, btn) {
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    await DB.deleteBeat(id);
+    btn.closest('.history-card').remove();
+    const body = document.getElementById('beat-history-body');
+    if (!body.querySelector('.history-card')) {
+      body.innerHTML = '<div class="history-empty">no beats yet!<br>save your first track 💾</div>';
+    }
+  },
+
+  async loadBeat(id, element) {
+    try {
+      const origHtml = element.innerHTML;
+      element.innerHTML = '<div class="hc-name">Loading...</div>';
+
+      const fullBeat = await DB.getBeat(id);
+
+      // 1. Stop playback
+      if (typeof playing !== 'undefined' && playing) App.stop();
+
+      // 2. Update Globals
+      bpm = fullBeat.bpm;
+      numSteps = fullBeat.numSteps;
+      document.getElementById('bpm-display').textContent = bpm;
+      document.getElementById('steps-display').textContent = numSteps;
+
+      // 3. Restore Channels
+      const savedChannels = JSON.parse(fullBeat.channelInstancesJson);
+      channelInstances.length = 0;
+      savedChannels.forEach((ch, i) => {
+        let def = INGREDIENT_DEFS.find(d => d.name === ch.name);
+        if (!def) {
+          def = { name: ch.name, color: ch.color};
+          INGREDIENT_DEFS.push(def);
+        }
+        channelInstances.push({ def, instanceNum: ch.instanceNum, id: i });
+      });
+
+      nextId = Math.max(0, ...channelInstances.map(c => c.id || 0)) + 1;
+
+      // 4. Restore Patterns
+      const parsedPatterns = JSON.parse(fullBeat.patternsJson);
+      patterns.length = 0;
+      parsedPatterns.forEach(p => patterns.push(p));
+
+      activePat = 0;
+
+      // 5. Restore Volumes & Muted
+      volumes.length = 0;
+      muted.length = 0;
+      for (let i = 0; i < channelInstances.length; i++) {
+        volumes.push(0.75);
+        muted.push(false);
+      }
+
+      // 6. Rerender UI
+      if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+      renderShelf();
+      renderRack();
+      renderPatterns();
+      if (typeof updateStatus === 'function') updateStatus();
+
+      UI.closeBeatHistory();
+      element.innerHTML = origHtml;
+
+    } catch (e) {
+      console.error("Failed to load beat:", e);
+      alert("Failed to load beat: " + e.message);
+      element.innerHTML = origHtml;
+    }
+  },
+
+  // ── Roll history modal ────────────────────────────────────
+  async openHistory() {
+    if (!Auth.isLoggedIn()) {
+      if(confirm('You need to log in to see your roll history. Go to login screen?')) {
+        window.location.href = 'login.html';
+      }
+      return;
+    }
+    const overlay = document.getElementById('history-overlay');
+    const body    = document.getElementById('history-body');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    body.innerHTML = '<div class="history-loading">loading...</div>';
+
+    try {
+      const rolls = await DB.listRolls();
+      if (!rolls.length) {
+        body.innerHTML = '<div class="history-empty">no rolls yet!<br>make some music 🍣</div>';
+        return;
+      }
+      body.innerHTML = '';
+      rolls.forEach(roll => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+
+        const stars = '★'.repeat(roll.rating) + '☆'.repeat(5 - roll.rating);
+        const date  = new Date(roll.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'2-digit' });
+        const ings  = (roll.ingredients || []).slice(0, 5).join(', ');
+
+        card.innerHTML = `
+          <div class="hc-left">
+            ${roll.canvasDataUrl
+              ? `<img class="hc-thumb" src="${roll.canvasDataUrl}" alt="sushi roll"/>`
+              : `<div class="hc-thumb hc-thumb-placeholder">🍣</div>`}
+          </div>
+          <div class="hc-info">
+            <div class="hc-name">${roll.rollName}</div>
+            <div class="hc-rating" title="${roll.ratingLabel}">${stars}</div>
+            <div class="hc-label">${roll.ratingLabel}</div>
+            <div class="hc-ings">${ings}</div>
+            <div class="hc-date">${date}</div>
+          </div>
+          <button class="hc-delete" onclick="UI._deleteRoll('${roll.id}', this)" title="delete">✕</button>
+        `;
+        body.appendChild(card);
+      });
+    } catch (e) {
+      body.innerHTML = `<div class="history-empty">error loading rolls<br><small>${e.message}</small></div>`;
+    }
+  },
+
+  closeHistory(e) {
+    const overlay = document.getElementById('history-overlay');
+    if (e && e.target !== overlay) return;
+    if (overlay) overlay.style.display = 'none';
+  },
+
+  async _deleteRoll(id, btn) {
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    await DB.deleteRoll(id);
+    btn.closest('.history-card').remove();
+    const body = document.getElementById('history-body');
+    if (!body.querySelector('.history-card')) {
+      body.innerHTML = '<div class="history-empty">no rolls yet!<br>make some music 🍣</div>';
+    }
+  }
+});
