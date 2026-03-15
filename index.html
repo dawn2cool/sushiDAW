@@ -80,6 +80,16 @@
     <button class="finish-btn" id="finish-btn" onclick="App.triggerFinish()">
         <span class="finish-stamp">🍱</span> finish roll
     </button>
+    <div class="groq-search-wrap">
+        <span class="groq-label">⚡ ai beat</span>
+        <div style="display:flex;gap:4px;align-items:center">
+            <input id="groq-query" class="settings-input"
+                   type="text" placeholder="e.g. lo-fi jazz"
+                   style="width:120px;height:28px;font-size:9px"
+                   onkeydown="if(event.key==='Enter') GroqEngine.fetchBeat()"/>
+            <button id="groq-btn" class="groq-btn" onclick="GroqEngine.fetchBeat()">ZAP</button>
+        </div>
+    </div>
 </div>
 
 <div class="rack-area" id="rack-area">
@@ -192,6 +202,7 @@
 <script src="js/db.js"></script>
 <script src="js/producer-tag.js"></script>
 <script src="js/mascot.js"></script>
+<script src="js/groq.js"></script>
 <script src="js/app.js"></script>
 
 </body>

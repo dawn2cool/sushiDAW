@@ -63,6 +63,8 @@ const GroqEngine = {
             });
 
             if (typeof renderRack === 'function') renderRack();
+            if (typeof Mascot !== 'undefined') Mascot.say('⚡ beat zapped!', 2800);
+            if (typeof Mascot !== 'undefined') Mascot.bounce();
             btn.textContent = "READY";
 
         } catch (e) {

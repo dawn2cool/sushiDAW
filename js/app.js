@@ -517,14 +517,17 @@ const App = {
       btn.textContent = '▶';
     }
   },
+
   stop() {
-    playing = false;
-    _tagFiredThisPlay = false;
-    clearTimeout(schedTimer);
+    playing = false;        // ← this line is missing
+    this.isPlaying = false;
+    if (typeof schedTimer !== 'undefined') clearTimeout(schedTimer);
     curStep = -1;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
-    document.getElementById('btn-play').textContent = '▶';
-  },
+    const playBtn = document.getElementById('btn-play');
+    if (playBtn) playBtn.textContent = '▶';
+    if (window.Mascot) Mascot.updateMood(false);
+},
   nudgeBpm(d) {
     window.bpm = Math.max(40, Math.min(300, window.bpm + d));
     document.getElementById('bpm-display').textContent = window.bpm;
