@@ -537,6 +537,21 @@ const App = {
     document.getElementById('steps-display').textContent = window.numSteps;
     renderRack();
   },
+  triggerFinish() {
+      console.log("🍱 Finish button clicked!");
+
+      // 1. Alert the mascot
+      if (typeof Mascot !== 'undefined') {
+          Mascot.onFinish(); //
+      }
+
+      // 2. Start the sushi animation sequence
+      if (typeof Roll !== 'undefined' && Roll.trigger) {
+          Roll.trigger(); // This connects to the logic in roll.js
+      } else {
+          console.error("Sushi engine (Roll) not found! Check if roll.js is loaded.");
+      }
+  },
   clearAll() {
     if (typeof Mascot !== 'undefined') Mascot.onClear();
     window.getGrid().forEach(row => row.forEach(cell => {
