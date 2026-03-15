@@ -440,7 +440,25 @@ html, body {
   box-shadow: 0 2px 0 rgba(0,0,0,0.3);
 }
 
+#mascot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
 
+#mascot-sprite {
+  width: 80px;
+  height: 80px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
 
 /* ════ STATUS STRIP ════ */
 .status-strip {
@@ -885,154 +903,25 @@ html, body {
   pointer-events: none;
 }
 
-/* ════════════════════════════════════════
-   MASCOT  —  Pixel art sushi roll character
-   Bottom-right corner, speech bubbles
-   ════════════════════════════════════════ */
 
-.mascot-container {
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  z-index: 900;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0;
-  cursor: pointer;
-  user-select: none;
-  /* Default float */
-  animation: mascotFloat 3s ease-in-out infinite;
+.groq-search-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: 10px;
 }
 
-/* ── Mascot image ── */
-.mascot-img {
-  width: 96px;
-  height: 96px;
-  object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  display: block;
-  filter: drop-shadow(3px 4px 0 rgba(0,0,0,0.35));
-  transition: transform 0.15s;
-}
-.mascot-container:hover .mascot-img {
-  transform: scale(1.06) rotate(-2deg);
+.groq-label {
+    font-family: var(--font-pixel);
+    font-size: 5px;
+    color: var(--ink3);
 }
 
-/* ── Bounce animation class ── */
-.mascot-bounce {
-  animation: mascotBounce 0.45s cubic-bezier(0.34,1.56,0.64,1) both !important;
-}
-
-/* ── Speech bubble wrapper ── */
-.mascot-bubble-wrap {
-  position: relative;
-  margin-right: 12px;
-  margin-bottom: 2px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-/* ── Speech bubble ── */
-.mascot-bubble {
-  font-family: var(--font-pixel);
-  font-size: 7px;
-  line-height: 1.6;
-  color: var(--ink);
-  background: var(--surface);
-  border: 3px solid var(--ink);
-  border-radius: 4px;
-  padding: 7px 10px;
-  max-width: 150px;
-  text-align: center;
-  box-shadow: 3px 3px 0 var(--ink);
-  white-space: nowrap;
-
-  /* Hidden by default */
-  opacity: 0;
-  transform: translateY(6px) scale(0.9);
-  pointer-events: none;
-  transition: none;
-}
-.mascot-bubble.show {
-  animation: bubblePop 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards;
-}
-.mascot-bubble.hide {
-  animation: bubbleFade 0.25s ease-in forwards;
-}
-
-/* ── Bubble tail (pixel triangle pointing down-right) ── */
-.mascot-bubble-tail {
-  width: 10px;
-  height: 10px;
-  margin-right: 22px;
-  position: relative;
-}
-.mascot-bubble-tail::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 0; height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 8px solid var(--ink);
-}
-.mascot-bubble-tail::after {
-  content: '';
-  position: absolute;
-  top: -2px; left: 2px;
-  width: 0; height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 6px solid var(--surface);
-}
-
-/* ── State-specific float speeds ── */
-.mascot-idle   { animation: mascotFloat 3.2s ease-in-out infinite; }
-.mascot-playing { animation: mascotDance 0.55s ease-in-out infinite; }
-.mascot-finish  { animation: mascotSpin 0.6s ease-in-out 3; }
-.mascot-roll_done { animation: mascotFloat 2s ease-in-out infinite; }
-
-/* ── Keyframes ── */
-@keyframes mascotFloat {
-  0%,100% { transform: translateY(0px);   }
-  50%      { transform: translateY(-7px);  }
-}
-
-@keyframes mascotDance {
-  0%,100% { transform: translateY(0)    rotate(-4deg) scale(1);    }
-  25%      { transform: translateY(-8px) rotate(3deg)  scale(1.04); }
-  75%      { transform: translateY(-4px) rotate(-2deg) scale(1.02); }
-}
-
-@keyframes mascotBounce {
-  0%   { transform: scale(1)    translateY(0);    }
-  30%  { transform: scale(1.18) translateY(-12px); }
-  60%  { transform: scale(0.94) translateY(0);    }
-  80%  { transform: scale(1.06) translateY(-4px); }
-  100% { transform: scale(1)    translateY(0);    }
-}
-
-@keyframes mascotSpin {
-  0%   { transform: rotate(0deg)   scale(1);    }
-  25%  { transform: rotate(-12deg) scale(1.1);  }
-  75%  { transform: rotate(12deg)  scale(1.1);  }
-  100% { transform: rotate(0deg)   scale(1);    }
-}
-
-@keyframes bubblePop {
-  from { opacity:0; transform: translateY(8px) scale(0.85); }
-  to   { opacity:1; transform: translateY(0)   scale(1);    }
-}
-
-@keyframes bubbleFade {
-  from { opacity:1; transform: translateY(0)   scale(1);    }
-  to   { opacity:0; transform: translateY(-4px) scale(0.92); }
-}
-
-/* ── Dark theme adjustments ── */
-[data-theme="dark"] .mascot-img {
-  filter: drop-shadow(3px 4px 0 rgba(0,0,0,0.6));
+.groq-btn {
+    background: #f55036; /* Groq brand-ish orange/red */
+    color: white;
+    font-family: var(--font-pixel);
+    font-size: 6px;
+    border: 2px solid var(--border);
+    cursor: pointer;
 }
