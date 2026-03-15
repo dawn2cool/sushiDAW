@@ -441,24 +441,59 @@ html, body {
   box-shadow: 0 2px 0 rgba(0,0,0,0.3);
 }
 
+/* ── MASCOT ── */
 #mascot-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 500;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  pointer-events: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    
+    /* KEEPING YOUR HOVER ANIMATION HERE */
+    animation: mascotFloat 3s ease-in-out infinite;
 }
 
 #mascot-sprite {
-  width: 80px;
-  height: 80px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+    width: 120px;
+    height: 120px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('../mascot_left.png'); /* Default */
+    pointer-events: auto;
+    cursor: help;
+}
+
+.mascot-bubble {
+    background: white;
+    border: 2px solid var(--ink);
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    max-width: 160px;
+    text-align: center;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+    
+    /* Visibility controlled by JS only */
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* The JS will toggle this class every 10 seconds */
+.mascot-bubble.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes mascotFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
 }
 
 /* ════ STATUS STRIP ════ */

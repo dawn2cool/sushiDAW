@@ -489,6 +489,66 @@ function renderShelf() {
   });
 }
 
+/* ── MASCOT LOGIC ── */
+/* ── MASCOT LOGIC ── */
+const Mascot = {
+  el: null,
+  sprite: null,
+  idlePhrases: [
+    "tip: Click an ingredient to change the sound !", 
+    "tip: Use the BPM slider to speed up !", 
+    "tip: click and drag notes to duplicate !"
+
+  ],
+  playingPhrases: [
+    "ready to roll !", 
+    "yes chef !", 
+    "fresh as hell !",
+    "sick beat !",
+    "that shit is dope !",
+    "what the fuck IS indie ?!"
+  ],
+
+  init() {
+    this.el = document.getElementById('mascot-bubble');
+    this.sprite = document.getElementById('mascot-sprite');
+    
+    // Start talking immediately
+    this.updateMood(false); 
+    
+    // START THE 10-SECOND CYCLE
+    this.startSpeechCycle();
+  },
+
+  startSpeechCycle() {
+    if (this.cycle) clearInterval(this.cycle);
+    this.cycle = setInterval(() => {
+        this.el.classList.remove('show');
+        setTimeout(() => {
+            const phrases = playing ? this.playingPhrases : this.idlePhrases; // ← was Sequencer.isPlaying
+            this.el.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+            this.el.classList.add('show');
+        }, 1000);
+    }, 10000);
+},
+
+  updateMood(isPlaying) {
+    if (!this.sprite) return;
+    
+    // Path check: ../ because app.js is in /js/ folder
+    const imgUrl = isPlaying ? "../mascot_right.jpg" : "../mascot_left.png";
+    this.sprite.style.backgroundImage = `url('${imgUrl}')`;
+
+    // Make bubble pop up immediately when you hit play/stop
+    this.el.classList.remove('show');
+    setTimeout(() => {
+      const phrases = isPlaying ? this.playingPhrases : this.idlePhrases;
+      this.el.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+      this.el.classList.add('show');
+    }, 200);
+  }
+};
+
 /* ── TRANSPORT ── */
 const App = {
   togglePlay() {
@@ -505,13 +565,17 @@ const App = {
       btn.textContent = '▶';
     }
   },
+
   stop() {
-    playing = false;
-    clearTimeout(schedTimer);
+    playing = false;        // ← this line is missing
+    this.isPlaying = false;
+    if (typeof schedTimer !== 'undefined') clearTimeout(schedTimer);
     curStep = -1;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
-    document.getElementById('btn-play').textContent = '▶';
-  },
+    const playBtn = document.getElementById('btn-play');
+    if (playBtn) playBtn.textContent = '▶';
+    if (window.Mascot) Mascot.updateMood(false);
+},
   nudgeBpm(d) {
     bpm = Math.max(40, Math.min(300, bpm + d));
     document.getElementById('bpm-display').textContent = bpm;
@@ -611,6 +675,7 @@ const UI = {
    ════════════════════════════════════════ */
 (function init() {
   const saved = localStorage.getItem('sushidaw-theme');
+  Mascot.init();
   if (saved) {
     document.documentElement.dataset.theme = saved;
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
