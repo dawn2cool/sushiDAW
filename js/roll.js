@@ -498,13 +498,16 @@ const Roll = (() => {
         footer.style.display = 'none';
         overlay.classList.add('active');
 
-        // FIXED: Added a Promise.race to prevent the tag from blocking the animation forever
         if (typeof ProducerTag !== 'undefined') {
-          title.textContent = '🎙 rolling...';
-          await Promise.race([
-            ProducerTag.onFinish(),
-            new Promise(resolve => setTimeout(resolve, 3500)) // 3.5s hard timeout
-          ]);
+                title.textContent = '🎙 rolling...';
+                try {
+                  await Promise.race([
+                    ProducerTag.onFinish(),
+                    new Promise(resolve => setTimeout(resolve, 3000)) // 3 second max wait
+                  ]);
+                } catch (e) {
+                  console.warn("ProducerTag failed, continuing to animation...");
+                }
         }
 
         title.textContent = 'MAKING YOUR SUSHI...';
