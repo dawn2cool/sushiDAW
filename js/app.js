@@ -371,13 +371,7 @@ function schedule() {
   const dur = 60 / window.bpm / 4;
 
   while (nextTime < Audio.currentTime() + ahead) {
-    const isLastStep = curStep === window.numSteps - 1;
     curStep = (curStep + 1) % window.numSteps;
-
-    // Trigger Finish Tag if we just wrapped around
-    if (curStep === 0 && isLastStep && typeof ProducerTag !== 'undefined') {
-       ProducerTag.onFinish();
-    }
 
     // Iterate through all pattern layers
     window.patterns.forEach((grid) => {
@@ -690,9 +684,10 @@ function initAuthUI() {
     if (historyBtn)     historyBtn.style.display     = 'flex';
     if (beatHistoryBtn) beatHistoryBtn.style.display = 'flex';
 
-    // Sync producer tag name
+    // Sync + prefetch producer tag audio so it's ready instantly
     if (typeof ProducerTag !== 'undefined') {
       ProducerTag.load();
+      ProducerTag.prefetch();
     }
   } else {
     // Show the login button if the user is a guest
@@ -706,16 +701,32 @@ App.triggerFinish = function() {
   Roll.trigger();
 };
 
-// ── Extend App.togglePlay to fire producer tag ───────────────
+// ── togglePlay: await the producer tag BEFORE starting the sequencer ──
+// The original App.togglePlay is replaced — we call into it for stop,
+// but handle the start path ourselves so we can await the tag.
 const _origTogglePlay = App.togglePlay.bind(App);
-App.togglePlay = function() {
-  const wasPlaying = playing;
-  _origTogglePlay();
-
-  // MODIFIED: Ensure producer tag fires every time play is initiated from a stop
-  if (!wasPlaying && playing && typeof ProducerTag !== 'undefined') {
-    ProducerTag.onPlay();
+App.togglePlay = async function() {
+  // STOPPING — immediate, no tag
+  if (playing) {
+    _origTogglePlay();
+    return;
   }
+
+  // STARTING — fire tag first if configured, sequencer starts after
+  Audio.init(); Audio.resume();
+
+  // Disable play button while tag is generating/playing
+  const playBtn = document.getElementById('btn-play');
+  if (playBtn) { playBtn.textContent = '⏳'; playBtn.disabled = true; }
+
+  if (typeof ProducerTag !== 'undefined') {
+    await ProducerTag.onPlay();  // resolves when audio ends (or instantly if not in 'play'/'both' mode)
+  }
+
+  if (playBtn) { playBtn.disabled = false; }
+
+  // Now start the sequencer
+  _origTogglePlay();
 };
 
 /* ── UI namespace extensions ─────────────────────────────────── */
