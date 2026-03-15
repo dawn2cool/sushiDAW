@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-    <script src="env.js"></script>
+    <script>window.SUSHIDAW_API = window.SUSHIDAW_API || 'http://localhost:3000/';</script>
     <meta charset="UTF-8"/>
+    <script src="env.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
     <title>SushiDAW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=Caveat:wght@500;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/base.css"/>
     <link rel="stylesheet" href="css/ingredients.css"/>
     <link rel="stylesheet" href="css/animations.css"/>
 </head>
 <body>
 
-<!-- ══ TOPBAR ══ -->
 <header class="topbar">
     <div class="logo">
         <div class="logo-mark wobble-hover">🍣</div>
@@ -22,13 +22,21 @@
     <div class="topbar-divider"></div>
     <span class="topbar-sub">channel rack</span>
     <div class="topbar-right">
+        <button id="login-btn" class="pill accent wobble-hover" onclick="window.location.href='login.html'" style="display:none">log in</button>
+        <div id="user-pill" class="user-pill" style="display:none">
+            <span id="user-pill-name"></span>
+            <button class="user-pill-logout" onclick="Auth.logout()" title="log out">✕</button>
+        </div>
         <button class="icon-pill wobble-hover" onclick="UI.toggleTheme()" title="toggle theme"><span id="theme-icon">☽</span></button>
-        <button class="pill danger" onclick="App.clearAll()">clear</button>
-        <button class="pill accent wobble-hover" onclick="App.randomise()">🎲 random beat</button>
+        <button class="icon-pill wobble-hover" id="save-btn"         onclick="UI.saveBeat()"         title="save beat"    style="display:none">💾</button>
+        <button class="icon-pill wobble-hover" id="beat-history-btn" onclick="UI.openBeatHistory()"  title="beat history" style="display:none">🎹</button>
+        <button class="icon-pill wobble-hover" id="history-btn"      onclick="UI.openHistory()"      title="roll history" style="display:none">📜</button>
+        <button class="icon-pill wobble-hover" onclick="ProducerTag.openPanel()" title="producer tag">🎙</button>
+        <button class="pill danger"  onclick="App.clearAll()">clear</button>
+        <button class="pill accent wobble-hover" onclick="App.randomise()">random beat</button>
     </div>
 </header>
 
-<!-- ══ SETTINGS DRAWER ══ -->
 <div id="piano-roll-overlay" class="hidden">
     <div class="piano-roll-header">
         <span>Ingredient Editor</span>
@@ -40,7 +48,6 @@
     </div>
 </div>
 
-<!-- ══ TRANSPORT ══ -->
 <div class="transport">
     <div class="tgroup">
         <button class="t-btn play-btn" id="btn-play" onclick="App.togglePlay()">▶</button>
@@ -51,8 +58,8 @@
         <span class="tparam">bpm</span>
         <div class="tnum" id="bpm-display">128</div>
         <div class="tnudge-col">
-            <button class="tnudge" id="bpm-up" onclick="App.nudgeBpm(1)">▲</button>
-            <button class="tnudge" id="bpm-dn" onclick="App.nudgeBpm(-1)">▼</button>
+            <button class="tnudge" onclick="App.nudgeBpm(1)">▲</button>
+            <button class="tnudge" onclick="App.nudgeBpm(-1)">▼</button>
         </div>
     </div>
     <div class="tdivider"></div>
@@ -70,18 +77,15 @@
         <div class="pat-btns" id="pat-btns"></div>
     </div>
     <div class="t-spacer"></div>
-    <!-- BIG FINISH BUTTON -->
-    <button class="finish-btn" id="finish-btn" onclick="Roll.trigger()">
+    <button class="finish-btn" id="finish-btn" onclick="App.triggerFinish()">
         <span class="finish-stamp">🍱</span> finish roll
     </button>
 </div>
 
-<!-- ══ RACK AREA ══ -->
 <div class="rack-area" id="rack-area">
     <div class="rack-scroll" id="rack-scroll">
         <div class="step-header" id="step-header"></div>
         <div class="rack" id="rack"></div>
-        <!-- Rice + Nori base sits directly under ingredients -->
         <div class="rack-sushi-base" aria-hidden="true">
             <div class="rsb-inner">
                 <div class="rsb-label">~ rice + nori ~</div>
@@ -94,7 +98,14 @@
     </div>
 </div>
 
-<!-- ══ INGREDIENT SHELF ══ -->
+<div class="status-strip">
+    <div class="status-item">beats <span id="stat-active">0</span></div>
+    <div class="status-item">pat <span id="stat-pat">1</span></div>
+    <div class="gemini-pulse" id="gemini-indicator" style="display:none">
+        <span class="gem-dot">✦</span> suggestions — click ghosts to accept
+    </div>
+</div>
+
 <div class="ingredient-shelf">
     <div class="shelf-heading">
         <span class="shelf-title">ingredients</span>
@@ -103,16 +114,16 @@
     <div class="shelf-pills" id="shelf-pills"></div>
     <div class="ai-ingredient-container">
         <div class="ai-input-wrapper">
-            <input type="text" id="ai-ing-input" class="settings-input ai-field" placeholder="create a new ingredient!" autocomplete="off">
-            <button class="pill accent ai-create-btn wobble-hover" onclick="GeminiSuggest.generateIngredient(document.getElementById('ai-ing-input').value)">
+            <input type="text" id="ai-ing-input" class="settings-input ai-field"
+                   placeholder="create a new ingredient!" autocomplete="off">
+            <button class="pill accent ai-create-btn wobble-hover"
+                    onclick="GeminiSuggest.generateIngredient(document.getElementById('ai-ing-input').value)">
                 <span>✨</span> create!
             </button>
         </div>
     </div>
-
 </div>
 
-<!-- ══ SUSHI ROLL MODAL ══ -->
 <div class="roll-overlay" id="roll-overlay">
     <div class="roll-modal" id="roll-modal">
         <div class="roll-modal-header">
@@ -130,17 +141,57 @@
     </div>
 </div>
 
-<div id="mascot-container" class="mascot-idle">
-    <div id="mascot-sprite"></div>
-    <div class="mascot-bubble" id="mascot-bubble">Ready to roll?</div>
+<div class="history-overlay" id="beat-history-overlay" style="display:none"
+     onclick="UI.closeBeatHistory(event)">
+    <div class="history-modal">
+        <div class="history-header">
+            <span class="history-title">🎹 your saved beats</span>
+            <button class="done-btn" onclick="UI.closeBeatHistory()">✕</button>
+        </div>
+        <div class="history-body" id="beat-history-body">
+            <div class="history-loading">loading...</div>
+        </div>
+    </div>
 </div>
 
+<div class="history-overlay" id="history-overlay" style="display:none"
+     onclick="UI.closeHistory(event)">
+    <div class="history-modal">
+        <div class="history-header">
+            <span class="history-title">📜 your roll history</span>
+            <button class="done-btn" onclick="UI.closeHistory()">✕</button>
+        </div>
+        <div class="history-body" id="history-body">
+            <div class="history-loading">loading...</div>
+        </div>
+    </div>
+</div>
+
+<div class="history-overlay" id="save-overlay" style="display:none"
+     onclick="UI.closeSave(event)">
+    <div class="history-modal" style="max-width:340px">
+        <div class="history-header">
+            <span class="history-title">💾 save beat</span>
+            <button class="done-btn" onclick="UI.closeSave()">✕</button>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+            <label style="font-family:var(--font-pixel);font-size:6px;color:var(--ink2);letter-spacing:0.06em">beat name</label>
+            <input id="save-name-input" class="settings-input" type="text"
+                   placeholder="untitled beat" style="width:100%"
+                   onkeydown="if(event.key==='Enter') UI.confirmSave()"/>
+            <button class="pill accent" onclick="UI.confirmSave()" style="width:100%;padding:10px">💾 save to cloud</button>
+            <div id="save-status" style="font-family:var(--font-pixel);font-size:6px;color:var(--ink3);text-align:center;min-height:14px"></div>
+        </div>
+    </div>
+</div>
+
+<script src="js/auth.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/gemini.js"></script>
 <script src="js/roll.js"></script>
+<script src="js/db.js"></script>
+<script src="js/producer-tag.js"></script>
 <script src="js/app.js"></script>
-
-
 
 </body>
 </html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <title>SushiDAW — Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; }
+        input  { font-family: inherit; }
+
+        :root {
+          --fp: 'Press Start 2P', monospace;
+          --fm: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="light"] {
+          --bg:        #1A3E26;
+          --bg2:       #122E1C;
+          --surface:   #FFFDF4;
+          --surface2:  #F4EDD8;
+          --surface3:  #EBE2CC;
+          --ink:       #2A1608;
+          --ink2:      #7A5A3A;
+          --ink3:      #B09070;
+          --accent:    #C84A20;
+          --border:    3px solid #2A1608;
+          --shadow:    4px 4px 0 #2A1608;
+          --shelf-ink: #C8ECD4;
+        }
+        [data-theme="dark"] {
+          --bg:        #0A1C10;
+          --bg2:       #060E08;
+          --surface:   #251808;
+          --surface2:  #321E0C;
+          --surface3:  #3E2A14;
+          --ink:       #F0E6D0;
+          --ink2:      #AA8860;
+          --ink3:      #6A5040;
+          --accent:    #E8602A;
+          --border:    3px solid rgba(255,210,150,0.35);
+          --shadow:    4px 4px 0 rgba(0,0,0,0.8);
+          --shelf-ink: #70C090;
+        }
+
+        html, body {
+          width: 100%; min-height: 100vh;
+          background: var(--bg);
+          font-family: var(--fm);
+          color: var(--ink);
+          overflow: hidden;
+          position: relative;
+        }
+
+        /* ── Animated pixel background ── */
+        .bg-canvas {
+          position: fixed; inset: 0;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        /* Floating sushi emojis */
+        .floater {
+          position: fixed;
+          font-size: 28px;
+          animation: floatUp linear infinite;
+          opacity: 0.18;
+          z-index: 0;
+          pointer-events: none;
+        }
+        @keyframes floatUp {
+          0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+          10%  { opacity: 0.22; }
+          90%  { opacity: 0.22; }
+          100% { transform: translateY(-20px) rotate(360deg); opacity: 0; }
+        }
+
+        /* ── Layout ── */
+        .login-wrap {
+          position: relative; z-index: 10;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          gap: 20px;
+        }
+
+        /* ── Logo ── */
+        .login-logo {
+          text-align: center;
+          animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        .login-logo-mark {
+          font-size: 48px;
+          display: block;
+          margin-bottom: 10px;
+          animation: wobbleLogo 3s ease-in-out infinite;
+        }
+        .login-logo-word {
+          font-family: var(--fp);
+          font-size: 14px;
+          color: var(--shelf-ink);
+          text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+          letter-spacing: 0.04em;
+        }
+        .login-logo-word em { font-style: normal; color: var(--accent); }
+
+        @keyframes wobbleLogo {
+          0%,100% { transform: rotate(-3deg) scale(1); }
+          50%      { transform: rotate(4deg) scale(1.08); }
+        }
+
+        /* ── Card ── */
+        .login-card {
+          background: var(--surface);
+          border: var(--border);
+          border-radius: 4px;
+          box-shadow: var(--shadow);
+          width: 100%;
+          max-width: 360px;
+          overflow: hidden;
+          animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+        }
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.82) translateY(16px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);    }
+        }
+
+        .card-header {
+          background: var(--surface2);
+          border-bottom: var(--border);
+          padding: 14px 18px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .card-header-tabs {
+          display: flex;
+          gap: 6px;
+        }
+        .tab-btn {
+          font-family: var(--fp);
+          font-size: 7px;
+          padding: 6px 12px;
+          border-radius: 3px;
+          border: var(--border);
+          background: var(--surface3);
+          color: var(--ink2);
+          box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+          cursor: pointer;
+          transition: all 0.08s;
+          letter-spacing: 0.02em;
+        }
+        .tab-btn:hover  { background: var(--surface2); transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+        .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+
+        .card-body {
+          padding: 20px 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        /* ── Form fields ── */
+        .field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .field-label {
+          font-family: var(--fp);
+          font-size: 6px;
+          color: var(--ink2);
+          letter-spacing: 0.06em;
+        }
+        .field-input {
+          padding: 9px 12px;
+          border-radius: 3px;
+          border: var(--border);
+          background: var(--surface2);
+          font-family: var(--fm);
+          font-size: 13px;
+          color: var(--ink);
+          outline: none;
+          box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+          transition: border-color 0.12s, box-shadow 0.12s;
+          width: 100%;
+        }
+        .field-input:focus {
+          border-color: var(--accent);
+          box-shadow: 2px 2px 0 rgba(200,74,32,0.25);
+        }
+
+        /* ── Submit button ── */
+        .submit-btn {
+          font-family: var(--fp);
+          font-size: 8px;
+          padding: 12px 18px;
+          border-radius: 3px;
+          border: var(--border);
+          background: var(--accent);
+          color: #fff;
+          box-shadow: 4px 4px 0 var(--ink);
+          cursor: pointer;
+          width: 100%;
+          letter-spacing: 0.03em;
+          transition: all 0.08s;
+          animation: floatBtn 2.5s ease-in-out infinite;
+        }
+        .submit-btn:hover  { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); animation-play-state: paused; }
+        .submit-btn:active { transform: translate(3px,3px);   box-shadow: 1px 1px 0 var(--ink); }
+        @keyframes floatBtn {
+          0%,100% { transform: translateY(0);   box-shadow: 4px 4px 0 var(--ink); }
+          50%      { transform: translateY(-4px); box-shadow: 4px 8px 0 var(--ink); }
+        }
+
+        /* ── Guest / divider ── */
+        .or-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .or-line {
+          flex: 1;
+          height: 2px;
+          background: var(--surface3);
+        }
+        .or-text {
+          font-family: var(--fp);
+          font-size: 6px;
+          color: var(--ink3);
+        }
+        .guest-btn {
+          font-family: var(--fp);
+          font-size: 7px;
+          padding: 9px 14px;
+          border-radius: 3px;
+          border: var(--border);
+          background: var(--surface2);
+          color: var(--ink2);
+          box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+          cursor: pointer;
+          width: 100%;
+          transition: all 0.08s;
+        }
+        .guest-btn:hover  { background: var(--surface3); transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+        .guest-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 rgba(0,0,0,0.15); }
+
+        /* ── Error / loading ── */
+        .error-msg {
+          font-family: var(--fp);
+          font-size: 6px;
+          color: #c03030;
+          background: rgba(192,48,48,0.08);
+          border: 2px solid rgba(192,48,48,0.3);
+          padding: 8px 10px;
+          border-radius: 3px;
+          display: none;
+          letter-spacing: 0.03em;
+        }
+        .error-msg.show { display: block; }
+
+        /* ── Theme toggle ── */
+        .theme-toggle {
+          position: fixed;
+          top: 14px; right: 14px;
+          z-index: 100;
+          width: 34px; height: 34px;
+          border-radius: 3px;
+          border: var(--border);
+          background: rgba(255,255,255,0.1);
+          font-size: 14px;
+          color: var(--shelf-ink);
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+          cursor: pointer;
+          transition: all 0.08s;
+        }
+        .theme-toggle:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(0,0,0,0.3); }
+
+        /* ── Pixel corner decorations ── */
+        .pixel-corner {
+          position: fixed;
+          font-size: 18px;
+          opacity: 0.2;
+          pointer-events: none;
+        }
+        .pc-tl { top: 16px;  left: 16px; }
+        .pc-tr { top: 16px;  right: 60px; }
+        .pc-bl { bottom: 16px; left: 16px; }
+        .pc-br { bottom: 16px; right: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="pixel-corner pc-tl">🌿</div>
+<div class="pixel-corner pc-tr">🦐</div>
+<div class="pixel-corner pc-bl">🐟</div>
+<div class="pixel-corner pc-br">🥑</div>
+
+<button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">☽</button>
+
+<div class="login-wrap">
+
+    <div class="login-logo">
+        <span class="login-logo-mark">🍣</span>
+        <span class="login-logo-word">sushi<em>DAW</em></span>
+    </div>
+
+    <div class="login-card">
+        <div class="card-header">
+            <div class="card-header-tabs">
+                <button class="tab-btn active" id="tab-login"    onclick="switchTab('login')">login</button>
+                <button class="tab-btn"        id="tab-register" onclick="switchTab('register')">register</button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="field-group">
+                <label class="field-label" for="inp-user">username</label>
+                <input id="inp-user" class="field-input" type="text"
+                       autocomplete="username" autocapitalize="off"
+                       spellcheck="false" placeholder="chefmaster99"/>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="inp-pass">password</label>
+                <input id="inp-pass" class="field-input" type="password"
+                       autocomplete="current-password" placeholder="••••••••"/>
+            </div>
+            <div class="field-group" id="confirm-group" style="display:none">
+                <label class="field-label" for="inp-confirm">confirm password</label>
+                <input id="inp-confirm" class="field-input" type="password"
+                       autocomplete="new-password" placeholder="••••••••"/>
+            </div>
+
+            <div class="error-msg" id="error-msg"></div>
+
+            <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">
+                ▶ log in
+            </button>
+
+            <div class="or-row">
+                <div class="or-line"></div>
+                <span class="or-text">or</span>
+                <div class="or-line"></div>
+            </div>
+
+            <button class="guest-btn" onclick="continueAsGuest()">
+                👤 continue as guest
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ── Simple API config — points at the Ktor backend ──────────
+    const API = window.SUSHIDAW_API || 'http://localhost:3000/';
+    let mode = 'login';
+
+    // ── Floating sushi emojis ────────────────────────────────────
+    const SUSHI_ICONS = ['🍣','🍱','🥢','🍙','🦐','🐟','🥑','🥒','🧀','🌿'];
+    function spawnFloaters() {
+      for (let i = 0; i < 16; i++) {
+        const el = document.createElement('div');
+        el.className = 'floater';
+        el.textContent = SUSHI_ICONS[Math.floor(Math.random() * SUSHI_ICONS.length)];
+        el.style.left     = (Math.random() * 100) + 'vw';
+        el.style.fontSize = (18 + Math.random() * 24) + 'px';
+        const dur = 8 + Math.random() * 14;
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay   = -(Math.random() * dur) + 's';
+        document.body.appendChild(el);
+      }
+    }
+    spawnFloaters();
+
+    // ── Theme ───────────────────────────────────────────────────
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.dataset.theme === 'light' ? 'dark' : 'light';
+      html.dataset.theme = next;
+      document.getElementById('theme-btn').textContent = next === 'dark' ? '☀' : '☽';
+      localStorage.setItem('sushidaw-theme', next);
+    }
+    const savedTheme = localStorage.getItem('sushidaw-theme');
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      document.getElementById('theme-btn').textContent = savedTheme === 'dark' ? '☀' : '☽';
+    }
+
+    // ── Tab switch ───────────────────────────────────────────────
+    function switchTab(tab) {
+      mode = tab;
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('confirm-group').style.display = tab === 'register' ? 'flex' : 'none';
+      document.getElementById('submit-btn').textContent = tab === 'login' ? '▶ log in' : '▶ create account';
+      showError('');
+    }
+
+    // ── Error display ────────────────────────────────────────────
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.classList.toggle('show', !!msg);
+    }
+
+    // ── Submit ───────────────────────────────────────────────────
+    async function handleSubmit() {
+      const user    = document.getElementById('inp-user').value.trim();
+      const pass    = document.getElementById('inp-pass').value;
+      const confirm = document.getElementById('inp-confirm').value;
+      const btn     = document.getElementById('submit-btn');
+
+      showError('');
+      if (!user) { showError('enter your username'); return; }
+      if (!pass)  { showError('enter your password'); return; }
+      if (mode === 'register') {
+        if (pass.length < 4)   { showError('password must be at least 4 characters'); return; }
+        if (pass !== confirm)  { showError('passwords do not match'); return; }
+      }
+
+      btn.textContent = '⏳ ...';
+      btn.disabled    = true;
+
+      try {
+        const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+        const res      = await fetch(`${API}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || 'Something went wrong'); return; }
+
+        // Store session
+        localStorage.setItem('sushidaw_token', data.token);
+        localStorage.setItem('sushidaw_user', JSON.stringify({
+          userId: data.userId, username: data.username, producerTag: data.producerTag
+        }));
+        window.location.href = 'index.html';
+
+      } catch (e) {
+        showError('Cannot reach server — check your connection');
+      } finally {
+        btn.textContent = mode === 'login' ? '▶ log in' : '▶ create account';
+        btn.disabled    = false;
+      }
+    }
+
+    function continueAsGuest() {
+      localStorage.removeItem('sushidaw_token');
+      localStorage.removeItem('sushidaw_user');
+      window.location.href = 'index.html';
+    }
+
+    // ── Enter key support ────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+
+    // ── If already logged in, skip straight to app ───────────────
+    const existingToken = localStorage.getItem('sushidaw_token');
+    const existingUser  = localStorage.getItem('sushidaw_user');
+    if (existingToken && existingUser) window.location.href = 'index.html';
+</script>
+</body>
+</html>
