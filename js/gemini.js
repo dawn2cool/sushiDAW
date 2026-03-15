@@ -1,19 +1,11 @@
 /**
- * gemini.js — SushiDAW Ingredient Creator
- * Uses Gemini API to validate food and generate synth parameters.
+ * gemini.js — SushiDAW Ingredient Creator (Vercel Proxy Version)
+ * Uses a local Vercel serverless function to securely communicate with Gemini.
  */
 
 const GeminiSuggest = (() => {
-  const getKey = () => (typeof ENV !== 'undefined' ? GEMINI_KEY : '');
-
   async function generateIngredient(description) {
     if (!description || !description.trim()) return;
-
-    const key = getKey();
-    if (!key) {
-      alert('Gemini API Key not found. Please check env.js');
-      return;
-    }
 
     const btnEl = document.querySelector('.ai-create-btn');
     const inputField = document.getElementById('ai-ing-input');
@@ -24,6 +16,7 @@ const GeminiSuggest = (() => {
       btnEl.disabled = true;
     }
 
+    // This prompt instructs Gemini to return specific sound parameters for our Audio engine
     const prompt = `You are a sound designer for a sushi music app.
 The user wants to add "${description.trim()}" as a new sushi ingredient.
 
@@ -38,24 +31,18 @@ If NOT food: {"valid": false}
 Ingredient: ${description.trim()}`;
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.7,
-              response_mime_type: 'application/json'
-            }
-          })
-        }
-      );
+      // Call your Vercel serverless function proxy
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt })
+      });
 
       if (!res.ok) throw new Error(`API Error: ${res.status}`);
 
       const data = await res.json();
+
+      // Extract the JSON text from Gemini's response structure
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
@@ -67,11 +54,11 @@ Ingredient: ${description.trim()}`;
         const newIng = {
           name: description.trim().toLowerCase(),
           color: parsed.color || '#AAAAAA',
-          emoji: '✨', // Add a sparkle so you know it's custom AI!
+          emoji: '✨',
           synth: parsed.synth
         };
 
-        // 3. Add to global definitions for the current session
+        // 3. Add to global shelf definitions for the current session
         INGREDIENT_DEFS.push({
           name: newIng.name,
           color: newIng.color,
@@ -82,14 +69,15 @@ Ingredient: ${description.trim()}`;
         // 4. Save to LocalStorage so it survives refreshes
         try {
           const saved = JSON.parse(localStorage.getItem('sushidaw_custom_ingredients') || '[]');
-          // Prevent exact duplicates
           if (!saved.some(i => i.name === newIng.name)) {
             saved.push(newIng);
             localStorage.setItem('sushidaw_custom_ingredients', JSON.stringify(saved));
           }
-        } catch(e) { console.error("Could not save custom ingredient", e); }
+        } catch(e) {
+          console.error("Could not save custom ingredient", e);
+        }
 
-        // 5. Refresh the UI
+        // 5. Refresh the UI components
         if (typeof renderShelf === 'function') renderShelf();
         if (inputField) inputField.value = '';
 
@@ -97,8 +85,8 @@ Ingredient: ${description.trim()}`;
         alert(`"${description}" doesn't seem like a sushi ingredient! 🍣`);
       }
     } catch (err) {
-      console.error('Gemini Error:', err);
-      alert('Failed to create ingredient. Check console.');
+      console.error('Gemini Proxy Error:', err);
+      alert('Failed to create ingredient. See console for details.');
     } finally {
       if (btnEl) {
         btnEl.innerHTML = origHTML;
@@ -107,6 +95,7 @@ Ingredient: ${description.trim()}`;
     }
   }
 
+  // Necessary for app.js integration
   return {
     generateIngredient,
     notify: () => {},
