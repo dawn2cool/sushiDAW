@@ -20,6 +20,20 @@
         <span class="logo-word">sushi<em>DAW</em></span>
     </div>
     <div class="topbar-divider"></div>
+
+    <div class="groq-search-wrap">
+        <div class="groq-label">GROQ LPU SCANNER</div>
+        <div class="groq-input-group">
+            <input type="text" id="groq-query" 
+                placeholder="Search song rhythm..." 
+                onkeydown="if(event.key==='Enter') GroqEngine.fetchBeat()">
+            <button id="groq-btn" class="groq-btn" onclick="GroqEngine.fetchBeat()">
+                ZAP
+            </button>
+        </div>
+    </div>
+
+
     <span class="topbar-sub">channel rack</span>
     <div class="topbar-right">
         <button id="login-btn" class="pill accent wobble-hover" onclick="window.location.href='login.html'" style="display:none">log in</button>
@@ -192,6 +206,7 @@
 <script src="js/db.js"></script>
 <script src="js/producer-tag.js"></script>
 <script src="js/app.js"></script>
+<script src="js/groq.js"></script>
 
 </body>
 </html>

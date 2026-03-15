@@ -902,3 +902,25 @@ html, body {
   z-index: 400;
   pointer-events: none;
 }
+
+.groq-search-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: 10px;
+}
+
+.groq-label {
+    font-family: var(--font-pixel);
+    font-size: 5px;
+    color: var(--ink3);
+}
+
+.groq-btn {
+    background: #f55036; /* Groq brand-ish orange/red */
+    color: white;
+    font-family: var(--font-pixel);
+    font-size: 6px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+}
