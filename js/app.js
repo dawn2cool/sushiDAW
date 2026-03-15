@@ -509,12 +509,51 @@ function renderShelf() {
   });
 }
 
+/* ── MASCOT LOGIC ── */
+const Mascot = {
+  // We'll initialize these inside the init function
+  el: null,
+  sprite: null,
+
+  init() {
+    this.el = document.getElementById('mascot-bubble');
+    this.sprite = document.getElementById('mascot-sprite');
+  },
+
+  say(text, duration = 3000) {
+    if (!this.el) return;
+    this.el.textContent = text;
+    this.el.parentElement.classList.add('talking');
+    
+    // Auto-hide bubble after duration
+    setTimeout(() => {
+      this.el.parentElement.classList.remove('talking');
+    }, duration);
+  },
+
+  updateMood(isPlaying) {
+    if (!this.sprite) return;
+
+    // Use .png for both since that's what your file is!
+    const imgUrl = isPlaying ? "mascot_right.jpg" : "mascot_left.png";
+    
+    this.sprite.style.backgroundImage = `url('${imgUrl}')`;
+
+    if (isPlaying) {
+      this.say("Cooking up some fire beats!");
+    } else {
+      this.say("Ready to roll?");
+    }
+  }
+};
+
 /* ── TRANSPORT ── */
 const App = {
   togglePlay() {
     Audio.init(); Audio.resume();
     playing = !playing;
     const btn = document.getElementById('btn-play');
+    Mascot.updateMood(playing);
     if (playing) {
       curStep = -1;
       nextTime = Audio.currentTime();
@@ -642,15 +681,15 @@ const UI = {
    ════════════════════════════════════════ */
 (function init() {
   const saved = localStorage.getItem('sushidaw-theme');
+  Mascot.init();
+  Mascot.updateMood(false); // ← add this line
   if (saved) {
     document.documentElement.dataset.theme = saved;
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
   }
-
   renderPatterns();
   renderShelf();
   renderRack();
-
   window.addEventListener('resize', () => renderRack());
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
