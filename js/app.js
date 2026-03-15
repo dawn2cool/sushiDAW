@@ -339,31 +339,28 @@ function schedule() {
   if (!playing) return;
   const ahead = 0.1;
   const dur = 60 / bpm / 4;
-  const grid = getGrid();
+  const grid = getGrid(); // This gets ONLY the currently selected pattern
 
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % numSteps;
 
-    patterns.forEach((grid) => {
-          channelInstances.forEach((inst, r) => {
-            const cell = grid[r][curStep];
-            if (cell && cell.active && !muted[r]) {
-              const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
-              const hasMelody = cell.subNotes.some(n => n !== null);
-
-              if (hasMelody) {
-                const subStepDur = dur / 4;
-                cell.subNotes.forEach((p, i) => {
-                  if (p !== null) {
-                    Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
-                  }
-                });
-              } else {
-                Audio.playNote(baseIdx, nextTime, volumes[r], 0);
-              }
-            }
+    // ONLY loop through the current pattern's rows
+    channelInstances.forEach((inst, r) => {
+      const cell = grid[r][curStep];
+      if (cell && cell.active && !muted[r]) {
+        const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+        
+        // Handle melody (Piano Roll notes) or basic beat
+        if (cell.subNotes && cell.subNotes.some(n => n !== null)) {
+          const subStepDur = dur / 4;
+          cell.subNotes.forEach((p, i) => {
+            if (p !== null) Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
           });
-        });
+        } else {
+          Audio.playNote(baseIdx, nextTime, volumes[r], 0);
+        }
+      }
+    });
 
     animateStep(curStep);
     nextTime += dur;
@@ -373,10 +370,34 @@ function schedule() {
 
 function animateStep(s) {
   requestAnimationFrame(() => {
-    document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
-    document.querySelectorAll(`.cell[data-s="${s}"]`).forEach(c => {
-      c.classList.add(c.classList.contains('on') ? 'playing' : 'playing-off');
+    // 1. Remove highlight from EVERY cell first
+    document.querySelectorAll('.cell').forEach(c => {
+        c.classList.remove('playing', 'playing-off');
     });
+
+    // 2. Find cells in the current step
+    const activeColumn = document.querySelectorAll(`.cell[data-s="${s}"]`);
+    
+    activeColumn.forEach(c => {
+      if (c.classList.contains('on')) {
+        c.classList.add('playing'); // Bright flash for active notes
+      } else {
+        c.classList.add('playing-off'); // Subtle highlight for empty slots
+      }
+    });
+
+    // 3. Auto-scroll logic (keeps the needle in view)
+    if (playing && activeColumn.length > 0) {
+      const firstCell = activeColumn[0];
+      const scrollContainer = document.getElementById('rack-scroll');
+      const rect = firstCell.getBoundingClientRect();
+      const containerRect = scrollContainer.getBoundingClientRect();
+
+      if (rect.right > containerRect.right - 50 || rect.left < containerRect.left + 50) {
+        firstCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
     uiStep = s;
   });
 }

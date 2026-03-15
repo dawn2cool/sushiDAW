@@ -224,6 +224,19 @@ html, body {
 .tnudge:hover { background: var(--surface3); color: var(--ink); transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--border2); }
 .tnudge:active { transform: translate(1px,1px); box-shadow: none; }
 
+/* The "Needle" Highlight */
+.cell.playing {
+    background-color: #fff !important; /* Flash white */
+    filter: brightness(1.5) saturate(1.2);
+    box-shadow: 0 0 15px white;
+    transform: scale(1.1);
+    z-index: 10;
+}
+
+.cell.playing-off {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid white !important;
+}
 .pat-btns { display: flex; gap: 4px; }
 .pat-btn {
   width: 28px; height: 28px; border-radius: 3px;
