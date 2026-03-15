@@ -4,7 +4,6 @@
  */
 
 const GeminiSuggest = (() => {
-  // Pulls the key from the ENV object defined in env.js
   const getKey = () => (typeof ENV !== 'undefined' ? ENV.GEMINI_KEY : '');
 
   async function generateIngredient(description) {
@@ -16,7 +15,6 @@ const GeminiSuggest = (() => {
       return;
     }
 
-    // UI Feedback: reference elements from index.html
     const btnEl = document.querySelector('.ai-create-btn');
     const inputField = document.getElementById('ai-ing-input');
     const origHTML = btnEl ? btnEl.innerHTML : '';
@@ -65,14 +63,33 @@ Ingredient: ${description.trim()}`;
         // 1. Register the new sound in the Audio engine
         const voiceIdx = Audio.addDynamicVoice(parsed.synth);
 
-        // 2. Add to global definitions so it appears on the shelf
-        INGREDIENT_DEFS.push({
+        // 2. Create the storable ingredient definition
+        const newIng = {
           name: description.trim().toLowerCase(),
           color: parsed.color || '#AAAAAA',
+          emoji: '✨', // Add a sparkle so you know it's custom AI!
+          synth: parsed.synth
+        };
+
+        // 3. Add to global definitions for the current session
+        INGREDIENT_DEFS.push({
+          name: newIng.name,
+          color: newIng.color,
+          emoji: newIng.emoji,
           voiceIdx: voiceIdx
         });
 
-        // 3. Refresh the UI components
+        // 4. Save to LocalStorage so it survives refreshes
+        try {
+          const saved = JSON.parse(localStorage.getItem('sushidaw_custom_ingredients') || '[]');
+          // Prevent exact duplicates
+          if (!saved.some(i => i.name === newIng.name)) {
+            saved.push(newIng);
+            localStorage.setItem('sushidaw_custom_ingredients', JSON.stringify(saved));
+          }
+        } catch(e) { console.error("Could not save custom ingredient", e); }
+
+        // 5. Refresh the UI
         if (typeof renderShelf === 'function') renderShelf();
         if (inputField) inputField.value = '';
 
@@ -90,7 +107,6 @@ Ingredient: ${description.trim()}`;
     }
   }
 
-  // Maintaining empty functions for sequencer compatibility in app.js
   return {
     generateIngredient,
     notify: () => {},

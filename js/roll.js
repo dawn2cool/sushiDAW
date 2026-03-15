@@ -445,17 +445,33 @@ const Roll = (() => {
   function showFooter(ingredients) {
     document.getElementById('roll-modal-title').textContent = 'ROLL COMPLETE!';
 
-    const name  = SUSHI_NAMES[Math.floor(Math.random() * SUSHI_NAMES.length)];
-    document.getElementById('roll-name').textContent = '🍱 ' + name;
+    const name   = SUSHI_NAMES[Math.floor(Math.random() * SUSHI_NAMES.length)];
     const unique = [...new Set(ingredients)];
+    const rating = getRating(unique.length);
+
+    document.getElementById('roll-name').textContent = '\u{1F371} ' + name;
     document.getElementById('roll-ingredients').textContent =
-      unique.map(i => (ING_VISUALS[i]?.emoji || '') + ' ' + i).join('  ·  ') || '🍚 plain rice roll';
+      unique.map(i => (ING_VISUALS[i]?.emoji || '') + ' ' + i).join('  \u00b7  ') || '\u{1F35A} plain rice roll';
 
     const footer = document.getElementById('roll-footer');
-    footer.style.display = 'flex';
+    footer.style.display       = 'flex';
     footer.style.flexDirection = 'column';
     footer.style.alignItems    = 'center';
     footer.style.gap           = '8px';
+
+    // Save to MongoDB if logged in
+    if (typeof Auth !== 'undefined' && Auth.isLoggedIn() && typeof DB !== 'undefined') {
+      const canvas     = document.getElementById('roll-canvas');
+      const canvasData = canvas ? canvas.toDataURL('image/jpeg', 0.5) : '';
+      DB.saveRoll({
+        rollName:      name,
+        ingredients:   unique,
+        rating:        rating.stars,
+        ratingLabel:   rating.label,
+        canvasDataUrl: canvasData,
+        beatId:        window._lastSavedBeatId || ''
+      }).catch(e => console.warn('saveRoll failed:', e));
+    }
   }
 
   return {
@@ -470,6 +486,9 @@ const Roll = (() => {
       });
 
       if (activeIngredients.length === 0) activeIngredients.push('rice');
+
+      // Fire producer tag before the animation starts
+      if (typeof ProducerTag !== 'undefined') ProducerTag.onFinish();
 
       if (playing) App.stop?.();
 
