@@ -715,19 +715,21 @@ function initAuthUI() {
 }
 
 // ── App.triggerFinish ────────────────────────────────────────
-App.triggerFinish = function() {
+App.triggerFinish = async function() {
   if (typeof Mascot !== 'undefined') Mascot.onFinish();
-  // Roll.trigger is async — must catch rejections or they silently swallow the animation
-  Promise.resolve()
-    .then(() => Roll.trigger())
-    .catch(err => {
-      console.error('Roll.trigger failed:', err);
-      // Recover: hide any partial overlay state
-      const overlay = document.getElementById('roll-overlay');
-      const title   = document.getElementById('roll-modal-title');
-      if (title)   title.textContent = 'something went wrong :(';
-      if (overlay) overlay.classList.remove('active');
-    });
+
+  // FORCE stop the music so the audio context is clear for the roll
+  App.stop();
+
+  try {
+    // This will now proceed even if the Producer Tag fails
+    await Roll.trigger();
+  } catch (err) {
+    console.error('Sushi Roll failed:', err);
+    // Fallback: manually show the overlay if the trigger crashed
+    document.getElementById('roll-overlay').classList.add('active');
+    document.getElementById('roll-modal-title').textContent = "Chef is busy! (Error)";
+  }
 };
 
 // ── togglePlay: sequencer starts immediately, tag fires AT step 0 ──
