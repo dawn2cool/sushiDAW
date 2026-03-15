@@ -266,6 +266,11 @@ const Mascot = (() => {
     onLogin,
     say,
     bounce,
+    // FIXED: Added updateMood to prevent the Uncaught TypeError in app.js
+    updateMood(isHappy) {
+        if (isHappy) setState('playing');
+        else setState('idle');
+    }
   };
 })();
 
