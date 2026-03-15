@@ -38,6 +38,7 @@ window.bpm        = 128;
 let playing    = false;
 let curStep    = -1;
 let uiStep     = -1;
+let _tagFiredThisPlay = false;  // prevents tag repeating on every loop
 let schedTimer = null;
 let nextTime   = 0;
 window.activePat  = 0;
@@ -371,12 +372,12 @@ function schedule() {
   const dur = 60 / window.bpm / 4;
 
   while (nextTime < Audio.currentTime() + ahead) {
-    const isLastStep = curStep === window.numSteps - 1;
     curStep = (curStep + 1) % window.numSteps;
 
-    // Trigger Finish Tag if we just wrapped around
-    if (curStep === 0 && isLastStep && typeof ProducerTag !== 'undefined') {
-       ProducerTag.onFinish();
+    // ── Fire producer tag at the downbeat (step 0), once per play session ──
+    if (curStep === 0 && !_tagFiredThisPlay && typeof ProducerTag !== 'undefined') {
+      _tagFiredThisPlay = true;
+      ProducerTag.onPlay(); // fire-and-forget — plays over the beat, no blocking
     }
 
     // Iterate through all pattern layers
@@ -515,6 +516,7 @@ const App = {
   },
   stop() {
     playing = false;
+    _tagFiredThisPlay = false;
     clearTimeout(schedTimer);
     curStep = -1;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
@@ -690,9 +692,10 @@ function initAuthUI() {
     if (historyBtn)     historyBtn.style.display     = 'flex';
     if (beatHistoryBtn) beatHistoryBtn.style.display = 'flex';
 
-    // Sync producer tag name
+    // Sync + prefetch producer tag audio so it's ready instantly
     if (typeof ProducerTag !== 'undefined') {
       ProducerTag.load();
+      ProducerTag.prefetch();
     }
   } else {
     // Show the login button if the user is a guest
@@ -706,16 +709,31 @@ App.triggerFinish = function() {
   Roll.trigger();
 };
 
-// ── Extend App.togglePlay to fire producer tag ───────────────
-const _origTogglePlay = App.togglePlay.bind(App);
+// ── togglePlay: sequencer starts immediately, tag fires AT step 0 ──
+// The tag plays over the beat at the downbeat — not before it.
+// schedule() handles the step-0 trigger via _tagFiredThisPlay flag.
 App.togglePlay = function() {
-  const wasPlaying = playing;
-  _origTogglePlay();
-
-  // MODIFIED: Ensure producer tag fires every time play is initiated from a stop
-  if (!wasPlaying && playing && typeof ProducerTag !== 'undefined') {
-    ProducerTag.onPlay();
+  if (playing) {
+    // STOPPING
+    _tagFiredThisPlay = false;
+    Audio.init(); Audio.resume();
+    playing = false;
+    clearTimeout(schedTimer);
+    const btn = document.getElementById('btn-play');
+    if (btn) btn.textContent = '▶';
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
+    return;
   }
+
+  // STARTING — sequencer kicks off immediately, tag fires at step 0
+  _tagFiredThisPlay = false;
+  Audio.init(); Audio.resume();
+  playing = true;
+  curStep = -1;
+  nextTime = Audio.currentTime();
+  const btn = document.getElementById('btn-play');
+  if (btn) btn.textContent = '⏸';
+  schedule();
 };
 
 /* ── UI namespace extensions ─────────────────────────────────── */

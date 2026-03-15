@@ -475,8 +475,7 @@ const Roll = (() => {
   }
 
   return {
-    trigger() {
-      // Accessing global window functions/variables
+    async trigger() {
       const grid = window.getGrid ? window.getGrid() : [];
       const activeIngredients = [];
 
@@ -489,18 +488,23 @@ const Roll = (() => {
 
       if (activeIngredients.length === 0) activeIngredients.push('rice');
 
-      // Fire producer tag before the animation starts
-      if (typeof ProducerTag !== 'undefined') ProducerTag.onFinish();
-
       if (typeof App !== 'undefined' && App.stop) App.stop();
 
       const overlay = document.getElementById('roll-overlay');
       const footer  = document.getElementById('roll-footer');
       const title   = document.getElementById('roll-modal-title');
 
-      title.textContent = 'MAKING YOUR SUSHI...';
+      // Show overlay immediately so it feels responsive
       footer.style.display = 'none';
       overlay.classList.add('active');
+
+      // ── Producer tag: WAIT for it to finish speaking before animating ──
+      if (typeof ProducerTag !== 'undefined') {
+        title.textContent = '🎙 rolling...';
+        await ProducerTag.onFinish();
+      }
+
+      title.textContent = 'MAKING YOUR SUSHI...';
 
       const canvas = document.getElementById('roll-canvas');
       const ctx    = canvas.getContext('2d');
