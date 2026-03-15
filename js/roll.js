@@ -453,6 +453,7 @@ const Roll = (() => {
     document.getElementById('roll-ingredients').textContent =
       unique.map(i => (ING_VISUALS[i]?.emoji || '') + ' ' + i).join('  \u00b7  ') || '\u{1F35A} plain rice roll';
 
+    if (typeof Mascot !== 'undefined') Mascot.onRollDone();
     const footer = document.getElementById('roll-footer');
     footer.style.display       = 'flex';
     footer.style.flexDirection = 'column';

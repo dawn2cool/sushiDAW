@@ -338,6 +338,7 @@ function handleCellClick(r, idx, ch, cell) {
   cellData.active = !cellData.active;
   if (cellData.active) {
     cell.classList.add('on', 'bounce');
+    if (typeof Mascot !== 'undefined') Mascot.onCellOn();
 
     // Apply AI color on manual click
     if (baseIdx >= 8) {
@@ -351,6 +352,7 @@ function handleCellClick(r, idx, ch, cell) {
   } else {
     cellData.subNotes = [null, null, null, null];
     cell.classList.remove('on');
+    if (typeof Mascot !== 'undefined') Mascot.onCellOff();
     // Reset AI color
     if (baseIdx >= 8) {
       cell.style.background  = ch.color + '15';
@@ -464,6 +466,7 @@ function addChannelInstance(def) {
   }
   volumes.splice(insertIdx, 0, 0.75);
   muted.splice(insertIdx, 0, false);
+  if (typeof Mascot !== 'undefined') Mascot.onIngredientAdd(def.name);
   renderShelf();
   renderRack();
 }
@@ -532,6 +535,7 @@ const App = {
     renderRack();
   },
   clearAll() {
+    if (typeof Mascot !== 'undefined') Mascot.onClear();
     window.getGrid().forEach(row => row.forEach(cell => {
         cell.active = false;
         cell.subNotes = [null,null,null,null];
@@ -550,6 +554,7 @@ const App = {
       }
     });
     if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
+    if (typeof Mascot !== 'undefined') Mascot.onRandomise();
     renderRack();
     updateStatus();
   }
@@ -656,6 +661,7 @@ function init() {
 
   // Auth UI bootstrap — runs after DOM is fully set up
   if (typeof initAuthUI === 'function') initAuthUI();
+  if (typeof Mascot !== 'undefined') Mascot.init();
 
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
@@ -706,6 +712,7 @@ function initAuthUI() {
 
 // ── App.triggerFinish — calls ProducerTag then Roll ──────────
 App.triggerFinish = function() {
+  if (typeof Mascot !== 'undefined') Mascot.onFinish();
   Roll.trigger();
 };
 
@@ -717,6 +724,7 @@ App.togglePlay = function() {
     // STOPPING
     _tagFiredThisPlay = false;
     Audio.init(); Audio.resume();
+    if (typeof Mascot !== 'undefined') Mascot.onStop();
     playing = false;
     clearTimeout(schedTimer);
     const btn = document.getElementById('btn-play');
@@ -728,6 +736,7 @@ App.togglePlay = function() {
   // STARTING — sequencer kicks off immediately, tag fires at step 0
   _tagFiredThisPlay = false;
   Audio.init(); Audio.resume();
+  if (typeof Mascot !== 'undefined') Mascot.onPlay();
   playing = true;
   curStep = -1;
   nextTime = Audio.currentTime();
@@ -766,6 +775,7 @@ Object.assign(UI, {
     try {
       const id = await DB.saveBeat(name);
       window._lastSavedBeatId = id;
+      if (typeof Mascot !== 'undefined') Mascot.onSave();
       status.textContent = '✓ saved!';
       setTimeout(() => {
         document.getElementById('save-overlay').style.display = 'none';

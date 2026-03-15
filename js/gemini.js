@@ -77,6 +77,7 @@ Return ONLY raw JSON:
         }
 
         // 5. Refresh the UI components
+        if (typeof Mascot !== 'undefined') Mascot.onIngredientAdd(newIng.name);
         if (typeof renderShelf === 'function') renderShelf();
         if (inputField) inputField.value = '';
 
