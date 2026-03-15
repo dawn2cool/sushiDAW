@@ -18,7 +18,7 @@ const ProducerTag = (() => {
     producerName:  '',
     tagTemplate:   'a {name} production.',
     voiceId:       VOICES[0].id,
-    playOn:        'finish',
+    playOn:        'finish', // 'play', 'finish', or 'both'
     cachedAudio:   null,
     cachedFor:     ''
   };
@@ -33,9 +33,9 @@ const ProducerTag = (() => {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) Object.assign(settings, JSON.parse(raw));
 
-      // Default to the logged-in user's name if no custom name is set
       if (!settings.producerName && typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
-        settings.producerName = Auth.getUser().producerTag || Auth.getUser().username;
+        const user = Auth.getUser();
+        settings.producerName = user.producerTag || user.username;
       }
     } catch { /* ignore */ }
   }
@@ -45,76 +45,62 @@ const ProducerTag = (() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
   }
 
-  async function generate() {
-    const key  = getElevenLabsKey();
-    const name = settings.producerName?.trim();
-    const template = settings.tagTemplate || 'A {name} production.';
+async function generate() {
+  const name = settings.producerName?.trim();
+  const template = settings.tagTemplate || 'A {name} production.';
 
-    if (!key) throw new Error("ElevenLabs key missing from env.js");
-    if (!name) throw new Error("Name is missing");
+  if (!name) return null;
 
-    // Replace {name} placeholder with the actual name
-    const text = template.replace('{name}', name);
+  const text = template.replace('{name}', name);
+  const cacheKey = `${text}::${settings.voiceId}`;
 
-    const cacheKey = `${text}::${settings.voiceId}`;
-    if (settings.cachedFor === cacheKey && settings.cachedAudio) {
-      return settings.cachedAudio;
-    }
-
-    isGenerating = true;
-
-    try {
-      const res = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${settings.voiceId}`,
-        {
-          method: 'POST',
-          headers: {
-            'xi-api-key': key,
-            'Content-Type': 'application/json',
-            'Accept': 'audio/mpeg'
-          },
-          body: JSON.stringify({
-            text: text,
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: { stability: 0.5, similarity_boost: 0.8 }
-          })
-        }
-      );
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.detail?.message || `API Error ${res.status}`);
-      }
-
-      const blob = await res.blob();
-      const reader = new FileReader();
-      return await new Promise((resolve, reject) => {
-        reader.onload = () => {
-          settings.cachedAudio = reader.result;
-          settings.cachedFor   = cacheKey;
-          resolve(reader.result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } finally {
-      isGenerating = false;
-    }
+  if (settings.cachedFor === cacheKey && settings.cachedAudio) {
+    return settings.cachedAudio;
   }
 
+  if (isGenerating) return null;
+  isGenerating = true;
+
+  try {
+    // Call the local Vercel proxy instead of ElevenLabs directly
+    const res = await fetch(`/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voiceId: settings.voiceId, text: text })
+    });
+
+    if (!res.ok) throw new Error("Proxy Error");
+
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        settings.cachedAudio = reader.result;
+        settings.cachedFor = cacheKey;
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.error(e);
+    return null;
+  } finally {
+    isGenerating = false;
+  }
+}
+
   async function play() {
-    if (!settings.enabled || !settings.producerName || !getElevenLabsKey()) return;
-    const audio = await generate();
-    if (!audio) return;
+    if (!settings.enabled || !settings.producerName) return;
+    const audioData = await generate();
+    if (!audioData) return;
 
     if (!audioEl) {
       audioEl = document.createElement('audio');
-      audioEl.style.display = 'none';
       document.body.appendChild(audioEl);
     }
-    audioEl.src    = audio;
-    audioEl.volume = 0.85;
-    await audioEl.play().catch(() => {});
+    audioEl.src = audioData;
+    audioEl.volume = 0.8;
+    audioEl.play().catch(e => console.warn("Playback blocked or failed", e));
   }
 
   function openPanel() {
@@ -125,94 +111,58 @@ const ProducerTag = (() => {
     const panel = document.createElement('div');
     panel.id = 'tag-panel';
     panel.className = 'tag-panel';
-
     panel.innerHTML = `
       <div class="tag-panel-header">
-        <span class="tag-panel-title">🎙 producer tag</span>
-        <button class="tag-panel-close" onclick="document.getElementById('tag-panel').remove()">✕</button>
+        <span>🎙 producer tag</span>
+        <button onclick="document.getElementById('tag-panel').remove()">✕</button>
       </div>
       <div class="tag-panel-body">
-
-        <label class="tag-label">your name</label>
-        <input id="tp-name" class="settings-input" type="text"
-          placeholder="e.g. DJ Salmon" value="${settings.producerName || ''}"
-          style="width:100%;margin-bottom:10px"/>
-
-        <label class="tag-label">tag text (use {name} for your name)</label>
-        <input id="tp-template" class="settings-input" type="text"
-          placeholder="A {name} production." value="${settings.tagTemplate || 'A {name} production.'}"
-          style="width:100%;margin-bottom:10px"/>
-
-        <label class="tag-label">voice</label>
-        <div class="tag-voices" id="tp-voices">
-          ${VOICES.map(v => `
-            <div class="tag-voice ${v.id === settings.voiceId ? 'active' : ''}"
-                 data-id="${v.id}" onclick="ProducerTag._selectVoice('${v.id}')">
-              <span class="tag-voice-name">${v.name}</span>
-            </div>`).join('')}
+        <label>your name</label>
+        <input id="tp-name" type="text" value="${settings.producerName || ''}">
+        <label>tag text ({name} = name)</label>
+        <input id="tp-template" type="text" value="${settings.tagTemplate}">
+        <label>voice</label>
+        <div class="tag-voices">
+          ${VOICES.map(v => `<div class="tag-voice ${v.id === settings.voiceId ? 'active' : ''}" onclick="ProducerTag._selectVoice('${v.id}')">${v.name}</div>`).join('')}
         </div>
-
-        <label class="tag-label" style="margin-top:10px">play on</label>
+        <label>play on</label>
         <div class="tag-play-opts">
-           <button class="tag-opt-btn ${settings.playOn === 'play' ? 'active' : ''}" onclick="ProducerTag._setPlayOn('play')">▶ play</button>
-           <button class="tag-opt-btn ${settings.playOn === 'finish' ? 'active' : ''}" onclick="ProducerTag._setPlayOn('finish')">🍱 finish</button>
-           <button class="tag-opt-btn ${settings.playOn === 'both' ? 'active' : ''}" onclick="ProducerTag._setPlayOn('both')">both</button>
+           <button class="${settings.playOn === 'play' ? 'active' : ''}" onclick="ProducerTag._setPlayOn('play')">▶ start</button>
+           <button class="${settings.playOn === 'finish' ? 'active' : ''}" onclick="ProducerTag._setPlayOn('finish')">🍱 finish</button>
+           <button class="${settings.playOn === 'both' ? 'active' : ''}" onclick="ProducerTag._setPlayOn('both')">both</button>
         </div>
-
-        <div class="tag-actions" style="margin-top:14px;display:flex;gap:8px;">
-          <button class="pill accent" id="tp-preview" onclick="ProducerTag._preview()">▶ preview</button>
+        <div style="display:flex; gap:8px; margin-top:12px">
+          <button class="pill accent" onclick="ProducerTag._preview()">▶ preview</button>
           <button class="pill" onclick="ProducerTag._save()">save</button>
         </div>
-        <div id="tp-status" class="tag-status" style="margin-top:8px;"></div>
+        <div id="tp-status"></div>
       </div>
     `;
     document.body.appendChild(panel);
   }
 
-  function _save() {
-    settings.producerName = document.getElementById('tp-name').value.trim();
-    settings.tagTemplate  = document.getElementById('tp-template').value.trim();
-    settings.cachedAudio  = null;
-    save();
-    document.getElementById('tp-status').textContent = '✓ saved!';
-  }
-
-  async function _preview() {
-    settings.producerName = document.getElementById('tp-name').value.trim();
-    settings.tagTemplate  = document.getElementById('tp-template').value.trim();
-    settings.cachedAudio  = null;
-
-    const status = document.getElementById('tp-status');
-    try {
-      await play();
-      status.textContent = '✓ played!';
-    } catch (e) {
-      status.textContent = '⚠ ' + e.message;
-    }
-  }
-
-  function _selectVoice(id) {
-      settings.voiceId = id;
-      settings.cachedAudio = null;
-
-      document.querySelectorAll('.tag-voice').forEach(el => {
-       el.classList.toggle('active', el.dataset.id === id);
-     });
-  }
-
-  function _setPlayOn(val) {
-    settings.playOn = val;
-    document.querySelectorAll('.tag-play-opts .tag-opt-btn').forEach(el => {
-      el.classList.toggle('active', el.getAttribute('onclick').includes(`'${val}'`));
-    });
-  }
-
-  load();
-
-  // Public API triggers for the DAW playback and finish events
   return {
     onPlay: () => (settings.playOn === 'play' || settings.playOn === 'both') && play(),
     onFinish: () => (settings.playOn === 'finish' || settings.playOn === 'both') && play(),
-    openPanel, _selectVoice, _setPlayOn, _preview, _save
+    play,
+    openPanel,
+    _save: () => {
+      settings.producerName = document.getElementById('tp-name').value;
+      settings.tagTemplate = document.getElementById('tp-template').value;
+      settings.cachedAudio = null;
+      save();
+      document.getElementById('tp-status').textContent = '✓ saved';
+    },
+    _preview: play,
+    _selectVoice: (id) => {
+      settings.voiceId = id;
+      settings.cachedAudio = null;
+      ProducerTag.openPanel(); // re-render
+    },
+    _setPlayOn: (val) => {
+      settings.playOn = val;
+      ProducerTag.openPanel(); // re-render
+    }
   };
 })();
+window.ProducerTag = ProducerTag;

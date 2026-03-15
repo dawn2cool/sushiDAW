@@ -371,7 +371,13 @@ function schedule() {
   const dur = 60 / window.bpm / 4;
 
   while (nextTime < Audio.currentTime() + ahead) {
+    const isLastStep = curStep === window.numSteps - 1;
     curStep = (curStep + 1) % window.numSteps;
+
+    // Trigger Finish Tag if we just wrapped around
+    if (curStep === 0 && isLastStep && typeof ProducerTag !== 'undefined') {
+       ProducerTag.onFinish();
+    }
 
     // Iterate through all pattern layers
     window.patterns.forEach((grid) => {
