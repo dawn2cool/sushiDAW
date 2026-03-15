@@ -184,7 +184,7 @@ function renderRack() {
         cell.onclick = () => handleCellClick(r, idx, ch, cell);
         cell.oncontextmenu = (e) => {
           e.preventDefault();
-          openPianoRoll(r); // Opens full-row editor
+          openPianoRoll(r);
         };
         grp.appendChild(cell);
       }
@@ -196,7 +196,7 @@ function renderRack() {
   renderHeader();
 }
 
-/* ── PIANO ROLL LOGIC (1:1 FULL BAR SYNC) ── */
+/* ── PIANO ROLL LOGIC ── */
 function openPianoRoll(row) {
   const overlay = document.getElementById('piano-roll-overlay');
   const gridContainer = document.getElementById('piano-roll-grid');
@@ -204,7 +204,38 @@ function openPianoRoll(row) {
   const titleEl = overlay.querySelector('.piano-roll-header span');
 
   const ingredientName = channelInstances[row].def.name;
-  if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor (Full Bar)`;
+  if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor`;
+
+  // Set ingredient color so active notes match the track
+  const ingredientColor = channelInstances[row].def.color;
+  overlay.style.setProperty('--row-color', ingredientColor);
+
+  // Inject Clear button next to Done (once), rewire onclick each open
+  const header = overlay.querySelector('.piano-roll-header');
+  let clearBtn = header && header.querySelector('.clear-roll-btn');
+  if (header && !clearBtn) {
+    clearBtn = document.createElement('button');
+    clearBtn.className = 'done-btn clear-roll-btn';
+    clearBtn.style.cssText = 'background:var(--surface2);color:var(--ink);';
+    clearBtn.textContent = 'Clear';
+    const doneBtn = header.querySelector('.done-btn');
+    const btnGroup = document.createElement('div');
+    btnGroup.style.cssText = 'display:flex;gap:6px;align-items:center;';
+    doneBtn.parentNode.insertBefore(btnGroup, doneBtn);
+    btnGroup.appendChild(clearBtn);
+    btnGroup.appendChild(doneBtn);
+  }
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      const rowData = getGrid()[row];
+      for (let s = 0; s < numSteps; s++) {
+        rowData[s].active = false;
+        rowData[s].subNotes = [null, null, null, null];
+      }
+      gridContainer.querySelectorAll('.sub-cell').forEach(c => c.classList.remove('active'));
+      renderRack();
+    };
+  }
 
   overlay.classList.remove('hidden');
   gridContainer.innerHTML = '';
@@ -257,7 +288,7 @@ function openPianoRoll(row) {
           const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ingredientName);
           Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], pitch);
         }
-        renderRack(); // Immediate visual sync
+        renderRack();
       };
       gridContainer.appendChild(subCell);
     }
@@ -308,31 +339,28 @@ function schedule() {
   if (!playing) return;
   const ahead = 0.1;
   const dur = 60 / bpm / 4;
-  const grid = getGrid();
+  const grid = getGrid(); // This gets ONLY the currently selected pattern
 
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % numSteps;
 
-    patterns.forEach((grid) => {
-          channelInstances.forEach((inst, r) => {
-            const cell = grid[r][curStep];
-            if (cell && cell.active && !muted[r]) {
-              const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
-              const hasMelody = cell.subNotes.some(n => n !== null);
-
-              if (hasMelody) {
-                const subStepDur = dur / 4;
-                cell.subNotes.forEach((p, i) => {
-                  if (p !== null) {
-                    Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
-                  }
-                });
-              } else {
-                Audio.playNote(baseIdx, nextTime, volumes[r], 0);
-              }
-            }
+    // ONLY loop through the current pattern's rows
+    channelInstances.forEach((inst, r) => {
+      const cell = grid[r][curStep];
+      if (cell && cell.active && !muted[r]) {
+        const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
+        
+        // Handle melody (Piano Roll notes) or basic beat
+        if (cell.subNotes && cell.subNotes.some(n => n !== null)) {
+          const subStepDur = dur / 4;
+          cell.subNotes.forEach((p, i) => {
+            if (p !== null) Audio.playNote(baseIdx, nextTime + (i * subStepDur), volumes[r], p);
           });
-        });
+        } else {
+          Audio.playNote(baseIdx, nextTime, volumes[r], 0);
+        }
+      }
+    });
 
     animateStep(curStep);
     nextTime += dur;
@@ -342,10 +370,34 @@ function schedule() {
 
 function animateStep(s) {
   requestAnimationFrame(() => {
-    document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
-    document.querySelectorAll(`.cell[data-s="${s}"]`).forEach(c => {
-      c.classList.add(c.classList.contains('on') ? 'playing' : 'playing-off');
+    // 1. Remove highlight from EVERY cell first
+    document.querySelectorAll('.cell').forEach(c => {
+        c.classList.remove('playing', 'playing-off');
     });
+
+    // 2. Find cells in the current step
+    const activeColumn = document.querySelectorAll(`.cell[data-s="${s}"]`);
+    
+    activeColumn.forEach(c => {
+      if (c.classList.contains('on')) {
+        c.classList.add('playing'); // Bright flash for active notes
+      } else {
+        c.classList.add('playing-off'); // Subtle highlight for empty slots
+      }
+    });
+
+    // 3. Auto-scroll logic (keeps the needle in view)
+    if (playing && activeColumn.length > 0) {
+      const firstCell = activeColumn[0];
+      const scrollContainer = document.getElementById('rack-scroll');
+      const rect = firstCell.getBoundingClientRect();
+      const containerRect = scrollContainer.getBoundingClientRect();
+
+      if (rect.right > containerRect.right - 50 || rect.left < containerRect.left + 50) {
+        firstCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
     uiStep = s;
   });
 }
@@ -524,13 +576,11 @@ function renderPatterns() {
   addBtn.style.fontWeight = 'bold';
   addBtn.title = 'Add new pattern layer';
   addBtn.onclick = () => {
-    // Generate a new blank pattern grid
     const newGrid = Array(MAX_ROWS).fill(null).map(() =>
       Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
     );
     patterns.push(newGrid);
 
-    // Auto-switch to the newly created pattern
     activePat = patterns.length - 1;
     const statPat = document.getElementById('stat-pat');
     if (statPat) statPat.textContent = activePat + 1;
