@@ -580,6 +580,7 @@ html, body {
 .done-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
 .hidden { display: none !important; }
 
+
 .cell.ghost[data-ch="0"] { background: rgba(232,216,154,0.20) !important; }
 .cell.ghost[data-ch="1"] { background: rgba(240,96,64,0.15) !important; }
 .cell.ghost[data-ch="2"] { background: rgba(200,32,64,0.15) !important; }

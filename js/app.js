@@ -184,7 +184,7 @@ function renderRack() {
         cell.onclick = () => handleCellClick(r, idx, ch, cell);
         cell.oncontextmenu = (e) => {
           e.preventDefault();
-          openPianoRoll(r); // Opens full-row editor
+          openPianoRoll(r);
         };
         grp.appendChild(cell);
       }
@@ -196,7 +196,7 @@ function renderRack() {
   renderHeader();
 }
 
-/* ── PIANO ROLL LOGIC (1:1 FULL BAR SYNC) ── */
+/* ── PIANO ROLL LOGIC ── */
 function openPianoRoll(row) {
   const overlay = document.getElementById('piano-roll-overlay');
   const gridContainer = document.getElementById('piano-roll-grid');
@@ -204,7 +204,38 @@ function openPianoRoll(row) {
   const titleEl = overlay.querySelector('.piano-roll-header span');
 
   const ingredientName = channelInstances[row].def.name;
-  if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor (Full Bar)`;
+  if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor`;
+
+  // Set ingredient color so active notes match the track
+  const ingredientColor = channelInstances[row].def.color;
+  overlay.style.setProperty('--row-color', ingredientColor);
+
+  // Inject Clear button next to Done (once), rewire onclick each open
+  const header = overlay.querySelector('.piano-roll-header');
+  let clearBtn = header && header.querySelector('.clear-roll-btn');
+  if (header && !clearBtn) {
+    clearBtn = document.createElement('button');
+    clearBtn.className = 'done-btn clear-roll-btn';
+    clearBtn.style.cssText = 'background:var(--surface2);color:var(--ink);';
+    clearBtn.textContent = 'Clear';
+    const doneBtn = header.querySelector('.done-btn');
+    const btnGroup = document.createElement('div');
+    btnGroup.style.cssText = 'display:flex;gap:6px;align-items:center;';
+    doneBtn.parentNode.insertBefore(btnGroup, doneBtn);
+    btnGroup.appendChild(clearBtn);
+    btnGroup.appendChild(doneBtn);
+  }
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      const rowData = getGrid()[row];
+      for (let s = 0; s < numSteps; s++) {
+        rowData[s].active = false;
+        rowData[s].subNotes = [null, null, null, null];
+      }
+      gridContainer.querySelectorAll('.sub-cell').forEach(c => c.classList.remove('active'));
+      renderRack();
+    };
+  }
 
   overlay.classList.remove('hidden');
   gridContainer.innerHTML = '';
@@ -257,7 +288,7 @@ function openPianoRoll(row) {
           const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ingredientName);
           Audio.playNote(baseIdx, Audio.currentTime(), volumes[row], pitch);
         }
-        renderRack(); // Immediate visual sync
+        renderRack();
       };
       gridContainer.appendChild(subCell);
     }
@@ -524,13 +555,11 @@ function renderPatterns() {
   addBtn.style.fontWeight = 'bold';
   addBtn.title = 'Add new pattern layer';
   addBtn.onclick = () => {
-    // Generate a new blank pattern grid
     const newGrid = Array(MAX_ROWS).fill(null).map(() =>
       Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
     );
     patterns.push(newGrid);
 
-    // Auto-switch to the newly created pattern
     activePat = patterns.length - 1;
     const statPat = document.getElementById('stat-pat');
     if (statPat) statPat.textContent = activePat + 1;
