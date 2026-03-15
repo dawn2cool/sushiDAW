@@ -441,6 +441,26 @@ html, body {
   box-shadow: 0 2px 0 rgba(0,0,0,0.3);
 }
 
+#mascot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+#mascot-sprite {
+  width: 80px;
+  height: 80px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 /* ════ STATUS STRIP ════ */
 .status-strip {
   display: flex; align-items: center; gap: 18px;
