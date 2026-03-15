@@ -541,6 +541,25 @@ const App = {
         console.error("Roll engine not found.");
     }
   },
+  nudgeBpm(amt) {
+      window.bpm = Math.max(40, Math.min(240, window.bpm + amt));
+      const el = document.getElementById('bpm-display');
+      if (el) el.textContent = window.bpm;
+    },
+
+    nudgeSteps(amt) {
+      // Keep steps within a reasonable range (e.g., 8 to 64) and multiple of 8
+      const newSteps = Math.max(8, Math.min(64, window.numSteps + amt));
+      if (newSteps !== window.numSteps) {
+        window.numSteps = newSteps;
+        const el = document.getElementById('steps-display');
+        if (el) el.textContent = window.numSteps;
+
+        // Re-render the rack and header to accommodate new step count
+        renderRack();
+      }
+    },
+
 
   clearAll() {
     window.getGrid().forEach(row => row.forEach(cell => {
