@@ -4,7 +4,7 @@
  */
 
 const GeminiSuggest = (() => {
-  const getKey = () => (typeof ENV !== 'undefined' ? ENV.GEMINI_KEY : '');
+  const getKey = () => (typeof ENV !== 'undefined' ? GEMINI_KEY : '');
 
   async function generateIngredient(description) {
     if (!description || !description.trim()) return;
