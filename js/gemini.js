@@ -20,8 +20,8 @@ const GeminiSuggest = (() => {
     const prompt = `You are a sound designer for a sushi music app.
 The user wants to add "${description.trim()}" as a new sushi ingredient.
 
-1. Check if it is a real food or drink item.
-2. If valid, suggest a Web Audio synth profile and a fitting hex color.
+1. Check if it is an actual food or drink item.
+2. If valid, suggest a Web Audio synth profile and a fitting hex color based on flavor and texture.
 
 Respond ONLY with valid JSON:
 {"valid": true, "color": "#A0522D", "synth": {"freq": 220, "wave": "sine", "decay": 0.25, "gain": 0.5, "filter": {"type": "lowpass", "freq": 800}}}
