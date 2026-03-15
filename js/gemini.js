@@ -20,15 +20,14 @@ const GeminiSuggest = (() => {
     const prompt = `You are a sound designer for a sushi music app.
 The user wants to add "${description.trim()}" as a new sushi ingredient.
 
-1. Check if it is an actual food or drink item.
-2. If valid, suggest a Web Audio synth profile and a fitting hex color based on flavor and texture.
+Rules:
+1. "valid" must be TRUE if the item is ANY edible food, fruit, vegetable, or drink. Be creative.
+2. Only return "valid": false if the item is clearly not edible (e.g., "rock", "car", "keyboard").
+3. Suggest a hex "color" that matches the food.
+4. "synth" must include: "freq" (number 100-1000), "wave" ("sine","square","sawtooth","triangle"), "decay" (0.1-2.0), and "filter" (type: "lowpass", freq: 200-2000).
 
-Respond ONLY with valid JSON:
-{"valid": true, "color": "#A0522D", "synth": {"freq": 220, "wave": "sine", "decay": 0.25, "gain": 0.5, "filter": {"type": "lowpass", "freq": 800}}}
-
-If NOT food: {"valid": false}
-
-Ingredient: ${description.trim()}`;
+Return ONLY raw JSON:
+{"valid": true, "color": "#HEX", "synth": {"freq": 440, "wave": "sine", "decay": 0.5, "gain": 0.5, "filter": {"type": "lowpass", "freq": 1000}}}`;
 
     try {
       // Call your Vercel serverless function proxy
