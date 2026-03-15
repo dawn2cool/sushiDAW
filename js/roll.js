@@ -476,11 +476,13 @@ const Roll = (() => {
 
   return {
     trigger() {
-      const grid = getGrid();
+      // Accessing global window functions/variables
+      const grid = window.getGrid ? window.getGrid() : [];
       const activeIngredients = [];
+
       grid.forEach((row, r) => {
         if (row.some(c => c && c.active)) {
-          const inst = channelInstances[r];
+          const inst = window.channelInstances[r];
           if (inst) activeIngredients.push(inst.def.name);
         }
       });
@@ -490,7 +492,7 @@ const Roll = (() => {
       // Fire producer tag before the animation starts
       if (typeof ProducerTag !== 'undefined') ProducerTag.onFinish();
 
-      if (playing) App.stop?.();
+      if (typeof App !== 'undefined' && App.stop) App.stop();
 
       const overlay = document.getElementById('roll-overlay');
       const footer  = document.getElementById('roll-footer');
@@ -515,3 +517,6 @@ const Roll = (() => {
     }
   };
 })();
+
+// Attach Roll to the window object
+window.Roll = Roll;

@@ -14,7 +14,8 @@ const INGREDIENT_DEFS = [
   { name:'wasabi', color:'#1A5030' },
 ];
 
-let channelInstances = INGREDIENT_DEFS.map((def, i) => ({
+// EXPOSE TO GLOBAL SCOPE for roll.js and db.js
+window.channelInstances = INGREDIENT_DEFS.map((def, i) => ({
   def,
   instanceNum: 1,
   id: i,
@@ -26,23 +27,23 @@ let isDragging = false;
 let dragAction = true;
 
 function countInstances(name) {
-  return channelInstances.filter(c => c.def.name === name).length;
+  return window.channelInstances.filter(c => c.def.name === name).length;
 }
 
 /* ════════════════════════════════════════
    SEQUENCER STATE
    ════════════════════════════════════════ */
-let numSteps   = 16;
-let bpm        = 128;
+window.numSteps   = 16;
+window.bpm        = 128;
 let playing    = false;
 let curStep    = -1;
 let uiStep     = -1;
 let schedTimer = null;
 let nextTime   = 0;
-let activePat  = 0;
+window.activePat  = 0;
 
 const MAX_ROWS = 100;
-const patterns = Array(4).fill(null).map(() =>
+window.patterns = Array(4).fill(null).map(() =>
   Array(MAX_ROWS).fill(null).map(() =>
     Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
   )
@@ -50,7 +51,8 @@ const patterns = Array(4).fill(null).map(() =>
 const volumes    = Array(MAX_ROWS).fill(0.75);
 const muted      = Array(MAX_ROWS).fill(false);
 
-const getGrid = () => patterns[activePat];
+// EXPOSE TO GLOBAL SCOPE
+window.getGrid = () => window.patterns[window.activePat];
 
 /* ════════════════════════════════════════
    UI HELPERS
@@ -59,8 +61,8 @@ function cellW() {
   const scroll = document.getElementById('rack-scroll');
   const lw     = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--label-w') || '148');
   const avail  = (scroll?.clientWidth || 600) - lw - 24;
-  const gaps   = (numSteps - 1) * 3 + (Math.floor(numSteps / 4) - 1) * 6;
-  return Math.max(24, Math.min(36, Math.floor((avail - gaps) / numSteps)));
+  const gaps   = (window.numSteps - 1) * 3 + (Math.floor(window.numSteps / 4) - 1) * 6;
+  return Math.max(24, Math.min(36, Math.floor((avail - gaps) / window.numSteps)));
 }
 
 function renderHeader() {
@@ -75,7 +77,7 @@ function renderHeader() {
   headerWrapper.style.padding = '0 10px';
   headerWrapper.style.gap = '3px';
 
-  for (let g = 0; g < numSteps / 4; g++) {
+  for (let g = 0; g < window.numSteps / 4; g++) {
     const grp = document.createElement('div');
     grp.className = 'step-grp-h';
     grp.style.display = 'flex';
@@ -102,11 +104,11 @@ function renderRack() {
   if (!rack) return;
 
   rack.innerHTML = '';
-  const grid     = getGrid();
+  const grid     = window.getGrid();
   const cw       = cellW();
   const ghosts   = (typeof GeminiSuggest !== 'undefined') ? GeminiSuggest.getSuggestions() : [];
 
-  channelInstances.forEach((inst, r) => {
+  window.channelInstances.forEach((inst, r) => {
     const ch  = inst.def;
     const row = document.createElement('div');
     row.className = 'channel-row';
@@ -159,7 +161,7 @@ function renderRack() {
 
     const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === ch.name);
 
-    for (let g = 0; g < numSteps / 4; g++) {
+    for (let g = 0; g < window.numSteps / 4; g++) {
       const grp = document.createElement('div');
       grp.className = 'step-grp';
       if (g > 0) grp.style.marginLeft = '6px';
@@ -224,10 +226,10 @@ function openPianoRoll(row) {
   const sidebar = document.querySelector('.piano-keys-sidebar');
   const titleEl = overlay.querySelector('.piano-roll-header span');
 
-  const ingredientName = channelInstances[row].def.name;
+  const ingredientName = window.channelInstances[row].def.name;
   if (titleEl) titleEl.textContent = `${ingredientName.toUpperCase()} Editor`;
 
-  const ingredientColor = channelInstances[row].def.color;
+  const ingredientColor = window.channelInstances[row].def.color;
   overlay.style.setProperty('--row-color', ingredientColor);
 
   const header = overlay.querySelector('.piano-roll-header');
@@ -246,8 +248,8 @@ function openPianoRoll(row) {
   }
   if (clearBtn) {
     clearBtn.onclick = () => {
-      const rowData = getGrid()[row];
-      for (let s = 0; s < numSteps; s++) {
+      const rowData = window.getGrid()[row];
+      for (let s = 0; s < window.numSteps; s++) {
         rowData[s].active = false;
         rowData[s].subNotes = [null, null, null, null];
       }
@@ -261,7 +263,7 @@ function openPianoRoll(row) {
   sidebar.innerHTML = '';
 
   gridContainer.style.display = 'grid';
-  gridContainer.style.gridTemplateColumns = `repeat(${numSteps}, 1fr)`;
+  gridContainer.style.gridTemplateColumns = `repeat(${window.numSteps}, 1fr)`;
 
   const notes = ['B', 'A#', 'A', 'G#', 'G', 'F#', 'F', 'E', 'D#', 'D', 'C#', 'C'];
   notes.forEach((note, i) => {
@@ -277,10 +279,10 @@ function openPianoRoll(row) {
   });
 
   for (let noteIdx = 0; noteIdx < 12; noteIdx++) {
-    for (let s = 0; s < numSteps; s++) {
+    for (let s = 0; s < window.numSteps; s++) {
       const subCell = document.createElement('div');
       subCell.className = 'sub-cell';
-      const currentData = getGrid()[row][s];
+      const currentData = window.getGrid()[row][s];
       const pitch = 11 - noteIdx;
 
       if (currentData.active && currentData.subNotes[0] === pitch) {
@@ -293,7 +295,7 @@ function openPianoRoll(row) {
           currentData.active = false;
           currentData.subNotes[0] = null;
         } else {
-          const columnCells = gridContainer.querySelectorAll(`.sub-cell:nth-child(${numSteps}n + ${s + 1})`);
+          const columnCells = gridContainer.querySelectorAll(`.sub-cell:nth-child(${window.numSteps}n + ${s + 1})`);
           columnCells.forEach(c => c.classList.remove('active'));
 
           subCell.classList.add('active');
@@ -317,9 +319,9 @@ function closePianoRoll() {
 
 /* ── CELL CLICK ── */
 function handleCellClick(r, idx, ch, cell) {
-  const grid = getGrid();
+  const grid = window.getGrid();
   const cellData = grid[r][idx];
-  const inst = channelInstances[r];
+  const inst = window.channelInstances[r];
   const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
 
   if (cell.classList.contains('ghost')) {
@@ -357,7 +359,7 @@ function handleCellClick(r, idx, ch, cell) {
 
   if (typeof GeminiSuggest !== 'undefined') {
     GeminiSuggest.clearSuggestions();
-    GeminiSuggest.notify(grid, numSteps);
+    GeminiSuggest.notify(grid, window.numSteps);
   }
   updateStatus();
 }
@@ -366,14 +368,14 @@ function handleCellClick(r, idx, ch, cell) {
 function schedule() {
   if (!playing) return;
   const ahead = 0.1;
-  const dur = 60 / bpm / 4;
+  const dur = 60 / window.bpm / 4;
 
   while (nextTime < Audio.currentTime() + ahead) {
-    curStep = (curStep + 1) % numSteps;
+    curStep = (curStep + 1) % window.numSteps;
 
     // Iterate through all pattern layers
-    patterns.forEach((grid) => {
-      channelInstances.forEach((inst, r) => {
+    window.patterns.forEach((grid) => {
+      window.channelInstances.forEach((inst, r) => {
         const cell = grid[r][curStep];
         if (cell && cell.active && !muted[r]) {
           const baseIdx = INGREDIENT_DEFS.findIndex(d => d.name === inst.def.name);
@@ -445,13 +447,13 @@ function addChannelInstance(def) {
   const existingCount = countInstances(def.name);
   if (existingCount >= 5) return;
   const newInst = { def, instanceNum: existingCount + 1, id: nextId++ };
-  let insertIdx = channelInstances.length;
-  for (let i = channelInstances.length - 1; i >= 0; i--) {
-    if (channelInstances[i].def.name === def.name) { insertIdx = i + 1; break; }
+  let insertIdx = window.channelInstances.length;
+  for (let i = window.channelInstances.length - 1; i >= 0; i--) {
+    if (window.channelInstances[i].def.name === def.name) { insertIdx = i + 1; break; }
   }
-  channelInstances.splice(insertIdx, 0, newInst);
-  for (let p = 0; p < patterns.length; p++) {
-    patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
+  window.channelInstances.splice(insertIdx, 0, newInst);
+  for (let p = 0; p < window.patterns.length; p++) {
+    window.patterns[p].splice(insertIdx, 0, Array(300).fill(null).map(() => ({active:false, subNotes:[null,null,null,null]})));
   }
   volumes.splice(insertIdx, 0, 0.75);
   muted.splice(insertIdx, 0, false);
@@ -460,10 +462,10 @@ function addChannelInstance(def) {
 }
 
 function removeChannelInstance(rowIdx) {
-  if (channelInstances.length <= 1) return;
-  channelInstances.splice(rowIdx, 1);
-  for (let p = 0; p < patterns.length; p++) {
-    patterns[p].splice(rowIdx, 1);
+  if (window.channelInstances.length <= 1) return;
+  window.channelInstances.splice(rowIdx, 1);
+  for (let p = 0; p < window.patterns.length; p++) {
+    window.patterns[p].splice(rowIdx, 1);
   }
   volumes.splice(rowIdx, 1);
   muted.splice(rowIdx, 1);
@@ -513,16 +515,16 @@ const App = {
     document.getElementById('btn-play').textContent = '▶';
   },
   nudgeBpm(d) {
-    bpm = Math.max(40, Math.min(300, bpm + d));
-    document.getElementById('bpm-display').textContent = bpm;
+    window.bpm = Math.max(40, Math.min(300, window.bpm + d));
+    document.getElementById('bpm-display').textContent = window.bpm;
   },
   nudgeSteps(d) {
-    numSteps = Math.max(8, Math.min(64, numSteps + d));
-    document.getElementById('steps-display').textContent = numSteps;
+    window.numSteps = Math.max(8, Math.min(64, window.numSteps + d));
+    document.getElementById('steps-display').textContent = window.numSteps;
     renderRack();
   },
   clearAll() {
-    patterns[activePat].forEach(row => row.forEach(cell => {
+    window.getGrid().forEach(row => row.forEach(cell => {
         cell.active = false;
         cell.subNotes = [null,null,null,null];
     }));
@@ -530,11 +532,11 @@ const App = {
     updateStatus();
   },
   randomise() {
-    const grid = getGrid();
-    channelInstances.forEach((inst, r) => {
+    const grid = window.getGrid();
+    window.channelInstances.forEach((inst, r) => {
       const defIdx = INGREDIENT_DEFS.indexOf(inst.def);
       const threshold = defIdx === 0 ? 0.72 : defIdx < 3 ? 0.80 : 0.87;
-      for (let s = 0; s < numSteps; s++) {
+      for (let s = 0; s < window.numSteps; s++) {
         grid[r][s].active = Math.random() > threshold;
         grid[r][s].subNotes = [null, null, null, null];
       }
@@ -546,10 +548,10 @@ const App = {
 };
 
 function updateStatus() {
-  const grid = getGrid();
+  const grid = window.getGrid();
   let total = 0;
-  channelInstances.forEach((_, r) => {
-    for(let s=0; s<numSteps; s++) if(grid[r][s].active) total++;
+  window.channelInstances.forEach((_, r) => {
+    for(let s=0; s<window.numSteps; s++) if(grid[r][s].active) total++;
   });
   const el = document.getElementById('stat-active');
   if(el) el.textContent = total;
@@ -562,12 +564,12 @@ function renderPatterns() {
   const c = document.getElementById('pat-btns');
   if (!c) return;
   c.innerHTML = '';
-  for (let i = 0; i < patterns.length; i++) {
+  for (let i = 0; i < window.patterns.length; i++) {
       const b = document.createElement('button');
-      b.className = 'pat-btn' + (i === activePat ? ' active' : '');
+      b.className = 'pat-btn' + (i === window.activePat ? ' active' : '');
       b.textContent = i + 1;
       b.onclick = () => {
-        activePat = i;
+        window.activePat = i;
         renderPatterns();
         if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
         renderRack();
@@ -584,8 +586,8 @@ function renderPatterns() {
     const newGrid = Array(MAX_ROWS).fill(null).map(() =>
       Array(300).fill(null).map(() => ({ active: false, subNotes: [null, null, null, null] }))
     );
-    patterns.push(newGrid);
-    activePat = patterns.length - 1;
+    window.patterns.push(newGrid);
+    window.activePat = window.patterns.length - 1;
     renderPatterns();
     if (typeof GeminiSuggest !== 'undefined') GeminiSuggest.clearSuggestions();
     renderRack();
@@ -609,7 +611,7 @@ const UI = {
 /* ════════════════════════════════════════
    INIT
    ════════════════════════════════════════ */
-(function init() {
+function init() {
   const saved = localStorage.getItem('sushidaw-theme');
   if (saved) {
     document.documentElement.dataset.theme = saved;
@@ -643,8 +645,10 @@ const UI = {
 
   window.addEventListener('mouseup', () => { isDragging = false; });
   window.addEventListener('resize', () => renderRack());
+
   // Auth UI bootstrap — runs after DOM is fully set up
   if (typeof initAuthUI === 'function') initAuthUI();
+
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Escape') closePianoRoll();
@@ -653,7 +657,10 @@ const UI = {
       App.togglePlay();
     }
   });
-})();
+}
+
+// Ensure init runs after all scripts are loaded
+window.addEventListener('load', init);
 
 /* ════════════════════════════════════════
    AUTH + SAVE/HISTORY UI  —  Added features
@@ -698,7 +705,11 @@ const _origTogglePlay = App.togglePlay.bind(App);
 App.togglePlay = function() {
   const wasPlaying = playing;
   _origTogglePlay();
-  if (!wasPlaying && typeof ProducerTag !== 'undefined') ProducerTag.onPlay();
+
+  // MODIFIED: Ensure producer tag fires every time play is initiated from a stop
+  if (!wasPlaying && playing && typeof ProducerTag !== 'undefined') {
+    ProducerTag.onPlay();
+  }
 };
 
 /* ── UI namespace extensions ─────────────────────────────────── */
@@ -813,36 +824,36 @@ Object.assign(UI, {
       if (typeof playing !== 'undefined' && playing) App.stop();
 
       // 2. Update Globals
-      bpm = fullBeat.bpm;
-      numSteps = fullBeat.numSteps;
-      document.getElementById('bpm-display').textContent = bpm;
-      document.getElementById('steps-display').textContent = numSteps;
+      window.bpm = fullBeat.bpm;
+      window.numSteps = fullBeat.numSteps;
+      document.getElementById('bpm-display').textContent = window.bpm;
+      document.getElementById('steps-display').textContent = window.numSteps;
 
       // 3. Restore Channels
       const savedChannels = JSON.parse(fullBeat.channelInstancesJson);
-      channelInstances.length = 0;
+      window.channelInstances.length = 0;
       savedChannels.forEach((ch, i) => {
         let def = INGREDIENT_DEFS.find(d => d.name === ch.name);
         if (!def) {
           def = { name: ch.name, color: ch.color};
           INGREDIENT_DEFS.push(def);
         }
-        channelInstances.push({ def, instanceNum: ch.instanceNum, id: i });
+        window.channelInstances.push({ def, instanceNum: ch.instanceNum, id: i });
       });
 
-      nextId = Math.max(0, ...channelInstances.map(c => c.id || 0)) + 1;
+      nextId = Math.max(0, ...window.channelInstances.map(c => c.id || 0)) + 1;
 
       // 4. Restore Patterns
       const parsedPatterns = JSON.parse(fullBeat.patternsJson);
-      patterns.length = 0;
-      parsedPatterns.forEach(p => patterns.push(p));
+      window.patterns.length = 0;
+      parsedPatterns.forEach(p => window.patterns.push(p));
 
-      activePat = 0;
+      window.activePat = 0;
 
       // 5. Restore Volumes & Muted
       volumes.length = 0;
       muted.length = 0;
-      for (let i = 0; i < channelInstances.length; i++) {
+      for (let i = 0; i < window.channelInstances.length; i++) {
         volumes.push(0.75);
         muted.push(false);
       }
@@ -932,3 +943,7 @@ Object.assign(UI, {
     }
   }
 });
+
+// EXPOSE UI and App to global scope
+window.UI = UI;
+window.App = App;
