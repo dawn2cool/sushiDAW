@@ -17,13 +17,12 @@
 <header class="topbar">
     <div class="logo">
         <div class="logo-mark wobble-hover">🍣</div>
-        <span class="logo-word">Sushi<em>DAW</em></span>
+        <span class="logo-word">sushi<em>DAW</em></span>
     </div>
     <div class="topbar-divider"></div>
     <span class="topbar-sub">channel rack</span>
     <div class="topbar-right">
-        <button class="icon-pill wobble-hover" onclick="UI.toggleTheme()" title="Toggle theme"><span id="theme-icon">☽</span></button>
-        <button class="icon-pill wobble-hover" onclick="UI.toggleSettings()" title="Settings">⚙</button>
+        <button class="icon-pill wobble-hover" onclick="UI.toggleTheme()" title="toggle theme"><span id="theme-icon">☽</span></button>
         <button class="pill danger" onclick="App.clearAll()">clear</button>
         <button class="pill accent wobble-hover" onclick="App.randomise()">🎲 random beat</button>
     </div>
@@ -38,15 +37,6 @@
     <div class="piano-roll-grid-container">
         <div class="piano-keys-sidebar"></div>
         <div id="piano-roll-grid"></div>
-    </div>
-</div>
-
-<!-- ── Settings drawer (Gemini key lives here, no label) ── -->
-<div class="settings-drawer" id="settings-drawer" aria-hidden="true">
-    <div class="settings-inner">
-        <label class="settings-label">Gemini key</label>
-        <input class="settings-input" id="gemini-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false"/>
-        <span class="settings-hint">✦ whispers beat ideas in the background</span>
     </div>
 </div>
 
@@ -80,13 +70,6 @@
         <div class="pat-btns" id="pat-btns"></div>
     </div>
     <div class="t-spacer"></div>
-    <div class="step-readout">
-        <span class="readout-label">step</span>
-        <span class="readout-val" id="r-step">—</span>
-        <span class="readout-sep">/</span>
-        <span class="readout-label">bar</span>
-        <span class="readout-val" id="r-bar">—</span>
-    </div>
     <!-- BIG FINISH BUTTON -->
     <button class="finish-btn" id="finish-btn" onclick="Roll.trigger()">
         <span class="finish-stamp">🍱</span> finish roll
@@ -108,15 +91,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- ══ STATUS STRIP ══ -->
-<div class="status-strip">
-    <div class="status-item">active <span id="stat-active">0</span></div>
-    <div class="status-item">pattern <span id="stat-pat">1</span></div>
-    <div class="status-item gemini-pulse" id="gemini-indicator" style="display:none">
-        <span class="gem-dot">✦</span> suggestions — click ghost cells to accept
     </div>
 </div>
 
