@@ -16,3 +16,28 @@ requires java 17+ and mongodb.
 3. build and run the ktor server:
    ```bash
    ./gradlew run
+   ```
+
+## frontend setup
+
+frontend uses static files and vercel serverless functions for ai generation.
+
+ 1. set your api keys in your environment:
+
+        GEMINI_KEY: google gemini api key
+
+        GROQ_KEY: groq api key
+
+        ELEVENLABS_KEY: elevenlabs api key
+
+ 2. serve the root directory locally. if using vercel cli:
+    ```bash
+    vercel dev
+    ```
+
+    otherwise, use a basic web server:
+    ```bash
+    python -m http.server 8080
+    ```
+
+also make sure window.SUSHIDAW_API in index.html points to your backend instance.
