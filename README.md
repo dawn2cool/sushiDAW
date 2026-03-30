@@ -2,6 +2,15 @@
 this was our submission to SOTONHACK 2026!
 a browser-based daw, combining two things we love sushi & music.
 
+## light mode
+<img width="1847" height="1041" alt="Screenshot 2026-03-30 at 15-25-02 SushiDAW" src="https://github.com/user-attachments/assets/04d136d4-0cc8-4424-b276-16cfa61214a5" />
+
+## dark mode
+<img width="1847" height="1041" alt="Screenshot 2026-03-30 at 15-25-14 SushiDAW" src="https://github.com/user-attachments/assets/39989dcb-59bd-4e17-adaf-4ddd6cd0d717" />
+
+## producer tag
+<img width="1847" height="1041" alt="Screenshot 2026-03-30 at 15-25-58 SushiDAW" src="https://github.com/user-attachments/assets/e6230698-08e7-4dac-8871-a896da385d09" />
+
 ## backend setup
 
 requires java 17+ and mongodb. 
