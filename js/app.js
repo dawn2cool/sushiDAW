@@ -1,7 +1,4 @@
-/* ════════════════════════════════════════
-   app.js — SushiDAW
-   Dynamic channels, ingredient shelf, pattern engine, UI.
-   ════════════════════════════════════════ */
+// app.js - dynamic channels, ingredient shelf, pattern engine, UI.
 
 const INGREDIENT_DEFS = [
   { name:'cream cheese', color:'#C8A840' },
@@ -30,9 +27,7 @@ function countInstances(name) {
   return window.channelInstances.filter(c => c.def.name === name).length;
 }
 
-/* ════════════════════════════════════════
-   SEQUENCER STATE
-   ════════════════════════════════════════ */
+// sequencer state
 window.numSteps   = 16;
 window.bpm        = 128;
 let playing    = false;
@@ -55,9 +50,8 @@ const muted      = Array(MAX_ROWS).fill(false);
 // EXPOSE TO GLOBAL SCOPE
 window.getGrid = () => window.patterns[window.activePat];
 
-/* ════════════════════════════════════════
-   UI HELPERS
-   ════════════════════════════════════════ */
+//ui helpers
+
 function cellW() {
   const scroll = document.getElementById('rack-scroll');
   const lw     = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--label-w') || '148');
@@ -99,7 +93,7 @@ function renderHeader() {
   el.appendChild(headerWrapper);
 }
 
-/* ── RENDER RACK ── */
+// render rack
 function renderRack() {
   const rack = document.getElementById('rack');
   if (!rack) return;
@@ -220,7 +214,7 @@ function renderRack() {
   renderHeader();
 }
 
-/* ── PIANO ROLL LOGIC ── */
+// piano roll logic
 function openPianoRoll(row) {
   const overlay = document.getElementById('piano-roll-overlay');
   const gridContainer = document.getElementById('piano-roll-grid');
@@ -318,7 +312,7 @@ function closePianoRoll() {
   document.getElementById('piano-roll-overlay').classList.add('hidden');
 }
 
-/* ── CELL CLICK ── */
+// cell click
 function handleCellClick(r, idx, ch, cell) {
   const grid = window.getGrid();
   const cellData = grid[r][idx];
@@ -367,7 +361,7 @@ function handleCellClick(r, idx, ch, cell) {
   updateStatus();
 }
 
-/* ── SEQUENCER ENGINE (MULTI-PATTERN PLAYBACK) ── */
+// multi pattern playback
 function schedule() {
   if (!playing) return;
   const ahead = 0.1;
@@ -376,13 +370,13 @@ function schedule() {
   while (nextTime < Audio.currentTime() + ahead) {
     curStep = (curStep + 1) % window.numSteps;
 
-    // ── Fire producer tag at the downbeat (step 0), once per play session ──
+    // fire producer tag at the downbeat (step 0), once per play session
     if (curStep === 0 && !_tagFiredThisPlay && typeof ProducerTag !== 'undefined') {
       _tagFiredThisPlay = true;
       ProducerTag.onPlay(); // fire-and-forget — plays over the beat, no blocking
     }
 
-    // Iterate through all pattern layers
+    // iterate through all pattern layers
     window.patterns.forEach((grid) => {
       window.channelInstances.forEach((inst, r) => {
         const cell = grid[r][curStep];
@@ -420,7 +414,7 @@ function animateStep(s) {
   });
 }
 
-/* ── VOLUME WIDGET ── */
+// volume widget
 function buildVolume(r, ch) {
   const wrap = document.createElement('div');
   wrap.className = 'vol-wrap';
@@ -451,7 +445,7 @@ function buildVolume(r, ch) {
   return wrap;
 }
 
-/* ── CHANNEL MANAGEMENT ── */
+// channel management
 function addChannelInstance(def) {
   const existingCount = countInstances(def.name);
   if (existingCount >= 5) return;
@@ -483,7 +477,7 @@ function removeChannelInstance(rowIdx) {
   renderRack();
 }
 
-/* ── SHELF ── */
+// shelf
 function renderShelf() {
   const container = document.getElementById('shelf-pills');
   if(!container) return;
@@ -501,7 +495,7 @@ function renderShelf() {
   });
 }
 
-/* ── TRANSPORT ── */
+// transport
 const App = {
   togglePlay() {
     Audio.init(); Audio.resume();
@@ -528,12 +522,12 @@ const App = {
     if (window.Mascot) Mascot.updateMood(false);
   },
 
-  // FIXED: Consolidated triggerFinish into the main object and removed bottom override
+  // consolidated triggerFinish into the main object and removed bottom override
   async triggerFinish() {
     console.log("🍱 Finish button clicked!");
     if (typeof Mascot !== 'undefined') Mascot.onFinish();
 
-    this.stop(); // Always stop music first
+    this.stop(); // always stop music first
 
     if (typeof Roll !== 'undefined' && Roll.trigger) {
         await Roll.trigger();
@@ -548,14 +542,14 @@ const App = {
     },
 
     nudgeSteps(amt) {
-      // Keep steps within a reasonable range (e.g., 8 to 64) and multiple of 8
+      // keep steps within a reasonable range (e.g., 8 to 64) and multiple of 8
       const newSteps = Math.max(8, Math.min(64, window.numSteps + amt));
       if (newSteps !== window.numSteps) {
         window.numSteps = newSteps;
         const el = document.getElementById('steps-display');
         if (el) el.textContent = window.numSteps;
 
-        // Re-render the rack and header to accommodate new step count
+        // re-render the rack and header to accommodate new step count
         renderRack();
       }
     },
@@ -592,9 +586,7 @@ function updateStatus() {
   if(el) el.textContent = total;
 }
 
-/* ════════════════════════════════════════
-   PATTERN SWITCHER
-   ════════════════════════════════════════ */
+// pattern switcher
 function renderPatterns() {
   const c = document.getElementById('pat-btns');
   if (!c) return;
@@ -630,9 +622,7 @@ function renderPatterns() {
   c.appendChild(addBtn);
 }
 
-/* ════════════════════════════════════════
-   THEME
-   ════════════════════════════════════════ */
+// theme
 const UI = {
   toggleTheme() {
     const html = document.documentElement;
@@ -643,9 +633,7 @@ const UI = {
   }
 };
 
-/* ════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════ */
+// init
 function init() {
   const saved = localStorage.getItem('sushidaw-theme');
   if (saved) {
@@ -653,16 +641,16 @@ function init() {
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀' : '☽';
   }
 
-  // ── Load Custom AI Ingredients from Storage ──
+  // load custom ai ingredients from storage
   try {
     const customIngs = JSON.parse(localStorage.getItem('sushidaw_custom_ingredients') || '[]');
     customIngs.forEach(ing => {
-      // Re-register the synthesizer voice to get a valid voiceIdx in the audio engine
+      // re-register the synthesizer voice to get a valid voiceIdx in the audio engine
       const voiceIdx = (typeof Audio !== 'undefined' && Audio.addDynamicVoice)
                        ? Audio.addDynamicVoice(ing.synth)
                        : INGREDIENT_DEFS.length; // fallback
 
-      // Push it back into the global shelf array
+      // push it back into the global shelf array
       INGREDIENT_DEFS.push({
         name: ing.name,
         color: ing.color,
@@ -681,7 +669,7 @@ function init() {
   window.addEventListener('mouseup', () => { isDragging = false; });
   window.addEventListener('resize', () => renderRack());
 
-  // Auth UI bootstrap — runs after DOM is fully set up
+  // auth UI bootstrap — runs after DOM is fully set up
   if (typeof initAuthUI === 'function') initAuthUI();
   if (typeof Mascot !== 'undefined') Mascot.init();
 
@@ -695,14 +683,12 @@ function init() {
   });
 }
 
-// Ensure init runs after all scripts are loaded
+// ensure init runs after all scripts are loaded
 window.addEventListener('load', init);
 
-/* ════════════════════════════════════════
-   AUTH + SAVE/HISTORY UI  —  Added features
-   ════════════════════════════════════════ */
+// auth + save history
 
-// ── Wire up auth UI on page load ─────────────────────────────
+// wire up auth ui on page load
 function initAuthUI() {
   if (typeof Auth === 'undefined') return;
   const user = Auth.getUser();
@@ -712,7 +698,7 @@ function initAuthUI() {
     if (pill) pill.style.display = 'flex';
     if (name) name.textContent   = user.producerTag || user.username;
 
-    // Show save + history buttons
+    // show save + history buttons
     const saveBtn        = document.getElementById('save-btn');
     const historyBtn     = document.getElementById('history-btn');
     const beatHistoryBtn = document.getElementById('beat-history-btn');
@@ -720,19 +706,18 @@ function initAuthUI() {
     if (historyBtn)     historyBtn.style.display     = 'flex';
     if (beatHistoryBtn) beatHistoryBtn.style.display = 'flex';
 
-    // Sync + prefetch producer tag audio so it's ready instantly
+    // sync + prefetch producer tag audio so it's ready instantly
     if (typeof ProducerTag !== 'undefined') {
       ProducerTag.load();
       ProducerTag.prefetch();
     }
   } else {
-    // Show the login button if the user is a guest
+    // show the login button if the user is a guest
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) loginBtn.style.display = 'block';
   }
 }
 
-// ── App.triggerFinish ────────────────────────────────────────
 App.triggerFinish = async function() {
   if (typeof Mascot !== 'undefined') Mascot.onFinish();
 
@@ -763,11 +748,10 @@ App.togglePlay = function() {
     clearTimeout(schedTimer);
     const btn = document.getElementById('btn-play');
     if (btn) btn.textContent = '▶';
-    document.querySelectorAll('.cell').forEach(c => c.classList.remove('playing','playing-off'));
     return;
   }
 
-  // STARTING — sequencer kicks off immediately, tag fires at step 0
+  // starting or resuming
   _tagFiredThisPlay = false;
   Audio.init(); Audio.resume();
   if (typeof Mascot !== 'undefined') Mascot.onPlay();
@@ -779,10 +763,10 @@ App.togglePlay = function() {
   schedule();
 };
 
-/* ── UI namespace extensions ─────────────────────────────────── */
+// ui namespace
 Object.assign(UI, {
 
-  // ── Save beat modal ───────────────────────────────────────
+  // save beat modal
   saveBeat() {
     if (!Auth.isLoggedIn()) {
       if(confirm('You need to log in to save beats. Go to login screen?')) {
@@ -820,7 +804,7 @@ Object.assign(UI, {
     }
   },
 
-  // ── Beat history modal & Loading ─────────────────────────
+  // beat history modal
   async openBeatHistory() {
     if (!Auth.isLoggedIn()) {
       if(confirm('You need to log in to see your beats. Go to login screen?')) {
@@ -943,7 +927,7 @@ Object.assign(UI, {
     }
   },
 
-  // ── Roll history modal ────────────────────────────────────
+  // roll history modal
   async openHistory() {
     if (!Auth.isLoggedIn()) {
       if(confirm('You need to log in to see your roll history. Go to login screen?')) {
