@@ -1,7 +1,4 @@
-/*
-  roll.js — SushiDAW  (Pixel Art / Indie Game Edition)
-  Stardew Valley × Tsuki Adventure × RPG item reveal
-*/
+// roll logic and animation
 
 const Roll = (() => {
   let raf = null;
@@ -9,30 +6,30 @@ const Roll = (() => {
   const DURATION = 5200;
 
   const ING_VISUALS = {
-    'cream cheese': { colors: ['#FFF9E8','#E8D898'], outline: '#C8A840', label: 'cream cheese', emoji: '🧀' },
-    'salmon':       { colors: ['#FF8C60','#E05A32'], outline: '#B03820', label: 'salmon',       emoji: '🐟' },
-    'tuna':         { colors: ['#D63242','#A61B28'], outline: '#780F18', label: 'tuna',         emoji: '🍣' },
-    'avocado':      { colors: ['#82D068','#58A042'], outline: '#286022', label: 'avocado',      emoji: '🥑' },
-    'cucumber':     { colors: ['#B4E8A8','#68C45A'], outline: '#186028', label: 'cucumber',     emoji: '🥒' },
-    'egg':          { colors: ['#FFD242','#E6A212'], outline: '#C07A00', label: 'egg',          emoji: '🍳' },
-    'prawn':        { colors: ['#FF9A7B','#E86A44'], outline: '#B03020', label: 'prawn',        emoji: '🦐' },
-    'wasabi':       { colors: ['#78B868','#4A863A'], outline: '#1A5028', label: 'wasabi',       emoji: '🌿' },
+    'cream cheese': { colors: ['#FFF9E8','#E8D898'], outline: '#C8A840', label: 'cream cheese', emoji: '' },
+    'salmon':       { colors: ['#FF8C60','#E05A32'], outline: '#B03820', label: 'salmon',       emoji: '' },
+    'tuna':         { colors: ['#D63242','#A61B28'], outline: '#780F18', label: 'tuna',         emoji: '' },
+    'avocado':      { colors: ['#82D068','#58A042'], outline: '#286022', label: 'avocado',      emoji: '' },
+    'cucumber':     { colors: ['#B4E8A8','#68C45A'], outline: '#186028', label: 'cucumber',     emoji: '' },
+    'egg':          { colors: ['#FFD242','#E6A212'], outline: '#C07A00', label: 'egg',          emoji: '' },
+    'prawn':        { colors: ['#FF9A7B','#E86A44'], outline: '#B03020', label: 'prawn',        emoji: '' },
+    'wasabi':       { colors: ['#78B868','#4A863A'], outline: '#1A5028', label: 'wasabi',       emoji: '' },
   };
 
   const SUSHI_NAMES = [
-    'THE CHEF\'S SPECIAL', 'MIDNIGHT ROLL', 'SUNSET MAKI',
-    'THE BIG WAVE', 'SAKURA ROLL', 'DRAGON KISS',
-    'UMAMI BOMB', 'AUTUMN HARVEST', 'THE DEEP CUT',
-    'SPICY SURPRISE', 'GOLDEN CRUNCH', 'THE GARDEN GATE',
+    'the chefs special', 'midnight roll', 'sunset maki',
+    'the big wave', 'sakura roll', 'dragon kiss',
+    'umami bomb', 'autumn harvest', 'the deep cut',
+    'spicy surprise', 'golden crunch', 'the garden gate',
   ];
 
-  // Score ratings based on # of ingredients
+  // score ratings based on num ingredients
   const RATINGS = [
-    { min: 0, label: 'RICE BALL', stars: 1, color: '#B09070' },
-    { min: 1, label: 'NOVICE ROLL', stars: 2, color: '#C8A840' },
-    { min: 3, label: 'GOOD MAKI',  stars: 3, color: '#3A8030' },
-    { min: 5, label: 'MASTER CHEF', stars: 4, color: '#E85038' },
-    { min: 7, label: 'S-RANK SUSHI!', stars: 5, color: '#D09010' },
+    { min: 0, label: 'rice ball', stars: 1, color: '#B09070' },
+    { min: 1, label: 'novice roll', stars: 2, color: '#C8A840' },
+    { min: 3, label: 'good maki',  stars: 3, color: '#3A8030' },
+    { min: 5, label: 'master chef', stars: 4, color: '#E85038' },
+    { min: 7, label: 's-rank sushi', stars: 5, color: '#D09010' },
   ];
 
   function getRating(n) {
@@ -57,19 +54,19 @@ const Roll = (() => {
   function lerp(a,b,t)  { return a+(b-a)*t; }
   function phaseT(t,s,e) { return clamp((t-s)/(e-s),0,1); }
 
-  /* ── Pixel font renderer ── */
+  // pixel font renderer
   function pixelText(ctx, text, x, y, size, color, align='center') {
     ctx.font = `${size}px 'Press Start 2P', monospace`;
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
-    // Shadow
+    // shadow
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillText(text, x+2, y+2);
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
   }
 
-  /* ── Pixel rectangle with chunky border ── */
+  // pixel rectangle
   function pixelRect(ctx, x, y, w, h, fill, stroke, sw=3) {
     ctx.fillStyle = fill;
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
@@ -81,7 +78,7 @@ const Roll = (() => {
     }
   }
 
-  /* ── Sparkle / pixel star burst ── */
+  // sparkle
   function drawSparks(ctx, cx, cy, t, count=8, radius=60, color='#FFD242') {
     for (let i=0; i<count; i++) {
       const angle = (i/count)*Math.PI*2 + t*3;
@@ -94,7 +91,7 @@ const Roll = (() => {
     }
   }
 
-  /* ── Pixel star (rating) ── */
+  // rating 
   function drawPixelStar(ctx, cx, cy, filled, size=14) {
     const pts = [];
     for (let i=0; i<10; i++) {
@@ -113,12 +110,12 @@ const Roll = (() => {
     ctx.stroke();
   }
 
-  /* ── Pixel progress bar ── */
+  // progress bar
   function drawProgressBar(ctx, x, y, w, h, progress, fillColor, bgColor, label) {
     pixelRect(ctx, x, y, w, h, bgColor, '#2A1608', 2);
     const fw = Math.max(0, (w-4)*progress);
     if (fw > 0) pixelRect(ctx, x+2, y+2, fw, h-4, fillColor, null);
-    // Shine
+    // shine!
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fillRect(x+2, y+2, fw, Math.floor((h-4)/2));
     if (label) {
@@ -130,10 +127,10 @@ const Roll = (() => {
     }
   }
 
-  /* ── Seaweed wrapping ring ── */
+  // seaweed wrap ring
   function drawSeaweedRing(ctx, cx, cy, r, progress) {
     const sweep = progress * Math.PI * 2;
-    // Outer fill
+    // outer fill
     ctx.beginPath();
     ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + sweep);
     ctx.arc(cx, cy, r-16, -Math.PI/2 + sweep, -Math.PI/2, true);
@@ -145,9 +142,9 @@ const Roll = (() => {
     ctx.stroke();
   }
 
-  /* ── Sushi cross-section ── */
+  // sushi cross section
   function drawCrossSection(ctx, cx, cy, r, ingredients) {
-    // Shadow
+    // shadow
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.4)';
     ctx.shadowBlur = 0;
@@ -156,7 +153,7 @@ const Roll = (() => {
     ctx.fillStyle = '#1B4D2E'; ctx.fill();
     ctx.restore();
 
-    // Seaweed outer (pixelated circle = octagon-ish)
+    // seaweed exterior
     ctx.beginPath();
     const segs = 16;
     for (let i=0; i<=segs; i++) {
@@ -170,7 +167,7 @@ const Roll = (() => {
     ctx.fillStyle = '#1B4D2E'; ctx.fill();
     ctx.strokeStyle = '#0A2A14'; ctx.lineWidth = 4; ctx.stroke();
 
-    // Seaweed texture lines
+    // seaweed texture lines
     ctx.strokeStyle = '#0C3A1C'; ctx.lineWidth = 1.5;
     for (let a=0; a<Math.PI*2; a+=Math.PI/6) {
       const x1=cx+(r-14)*Math.cos(a), y1=cy+(r-14)*Math.sin(a);
@@ -178,13 +175,13 @@ const Roll = (() => {
       ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
     }
 
-    // Rice layer
+    // rice layer
     const riceR = r - 13;
     ctx.beginPath(); ctx.arc(cx,cy,riceR,0,Math.PI*2);
     ctx.fillStyle = '#FFFDF4'; ctx.fill();
     ctx.strokeStyle = '#C8B890'; ctx.lineWidth = 3; ctx.stroke();
 
-    // Rice grain dots
+    // rice grain dots
     ctx.fillStyle = '#F0E8D0';
     for (let i=0; i<18; i++) {
       const a = (i/18)*Math.PI*2;
@@ -198,7 +195,7 @@ const Roll = (() => {
       ctx.restore();
     }
 
-    // Ingredient blobs
+    // ingredient blobs
     const numIng = ingredients.length;
     const innerR = numIng <= 1 ? 0 : Math.min(riceR-28, 20 + numIng*3);
     ingredients.forEach((ing, i) => {
@@ -219,32 +216,32 @@ const Roll = (() => {
       }
       ctx.closePath();
 
-      // Ingredient gradient
+      // ingredient gradient
       const grad = ctx.createRadialGradient(bx-blobR*0.3,by-blobR*0.3,0,bx,by,blobR*1.2);
       grad.addColorStop(0, iv.colors[0]);
       grad.addColorStop(1, iv.colors[1]);
       ctx.fillStyle = grad; ctx.fill();
       ctx.strokeStyle = iv.outline || iv.colors[1]; ctx.lineWidth = 2.5; ctx.stroke();
 
-      // Shine on ingredient
+      // shine on ingredient
       ctx.beginPath(); ctx.arc(bx-blobR*0.3, by-blobR*0.3, blobR*0.3, 0, Math.PI*2);
       ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
     });
 
-    // Cute pixel face (center)
+    // cute pixel face (center)
     const eyeColor = '#2A1608';
-    // Left eye
+    // left eye
     ctx.fillStyle = eyeColor;
     ctx.fillRect(cx-12, cy-6, 4, 5);
-    // Right eye
+    // right eye
     ctx.fillRect(cx+8,  cy-6, 4, 5);
-    // Smile (pixel arc)
+    // smile (pixel arc)
     const smilePoints = [-6,-4,-2,0,2,0,6,-4]; // dx,dy pairs
     ctx.fillStyle = eyeColor;
     for (let i=0; i<smilePoints.length; i+=2) {
       ctx.fillRect(cx+smilePoints[i]-1, cy+4+smilePoints[i+1], 3, 3);
     }
-    // Blush
+    // blush
     ctx.fillStyle = 'rgba(255,100,100,0.38)';
     ctx.fillRect(cx-20, cy+2, 8, 6);
     ctx.fillRect(cx+12, cy+2, 8, 6);
@@ -256,14 +253,14 @@ const Roll = (() => {
 
     ctx.clearRect(0,0,W,H);
 
-    // Background — parchment with pixel grid
+    // bg - parchment
     const theme = document.documentElement.dataset.theme;
     const bgColor = theme==='dark' ? '#251808' : '#F4EDD8';
     const gridColor = theme==='dark' ? 'rgba(255,200,130,0.05)' : 'rgba(60,30,10,0.06)';
     ctx.fillStyle = bgColor;
     ctx.fillRect(0,0,W,H);
 
-    // Pixel grid dots
+    // grid dots
     ctx.fillStyle = gridColor;
     for (let gx=8; gx<W; gx+=16) {
       for (let gy=8; gy<H; gy+=16) {
@@ -276,7 +273,7 @@ const Roll = (() => {
     const surfColor = theme==='dark' ? '#321E0C' : '#FFFDF4';
     const surf2Color= theme==='dark' ? '#3E2A14' : '#F4EDD8';
 
-    /* ══ PHASE 1: Ingredient cards slide in (0 → 0.38) ══ */
+    // ingredient cards sliding in
     const p1 = phaseT(t, 0, 0.38);
     if (p1 > 0 && t < 0.42) {
       const numIng = ingredients.length || 1;
@@ -295,28 +292,28 @@ const Roll = (() => {
         const x = lerp(fromX, targetX, ep);
         const y = startY + i*(cardH+gap);
 
-        // Card shadow
+        // card shadow
         ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.fillRect(Math.round(x)+4, Math.round(y)+4, cardW, cardH);
 
-        // Card body
+        // card body
         pixelRect(ctx, x, y, cardW, cardH, surf2Color, inkColor, 3);
 
-        // Ingredient color stripe on left
+        // ingredient color stripe on left
         pixelRect(ctx, x, y, 8, cardH, iv.colors[0], null);
 
-        // Emoji
+        // emoji
         ctx.font = '18px serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(iv.emoji||'🍱', x+14, y+cardH/2);
 
-        // Label
+        // label
         if (ep > 0.45) {
           pixelText(ctx, iv.label.toUpperCase(), x+44, y+cardH/2, 7, inkColor, 'left');
         }
 
-        // Shimmer on fresh-revealed card
+        // shimmer on fresh-revealed card
         if (ep > 0.6 && ep < 0.95) {
           const shimX = x + cardW*(ep-0.6)/0.35;
           const shimGrad = ctx.createLinearGradient(shimX-10,0,shimX+10,0);
@@ -329,19 +326,19 @@ const Roll = (() => {
       });
     }
 
-    /* ══ PHASE 2: Seaweed wraps (0.34 → 0.65) ══ */
+    // seaweed wraps
     const p2 = phaseT(t, 0.34, 0.65);
     if (p2 > 0 && t < 0.72) {
       const rollR = 100;
       drawSeaweedRing(ctx, cx, cy, rollR, easeInOut(p2));
 
-      // Wrap progress text
+      // wrap progress text
       if (p2 < 0.95) {
         drawProgressBar(ctx, cx-90, H-60, 180, 18, easeInOut(p2), '#1B4D2E', surf2Color, 'ROLLING...');
       }
     }
 
-    /* ══ PHASE 3: Cross-section slides in (0.62 → 0.88) ══ */
+    // cross section slide in
     const p3 = phaseT(t, 0.62, 0.88);
     if (p3 > 0) {
       const rollR = 100;
@@ -350,7 +347,7 @@ const Roll = (() => {
 
       drawCrossSection(ctx, sliceX, cy, rollR, ingredients);
 
-      // Sparks burst when it arrives
+      // sparks burst when it arrives
       if (p3 > 0.7 && p3 < 0.95) {
         const sparkT = (p3-0.7)/0.25;
         drawSparks(ctx, sliceX, cy, sparkT, 12, 90, '#FFD242');
@@ -358,7 +355,7 @@ const Roll = (() => {
       }
     }
 
-    /* ══ PHASE 4: Score panel slides up (0.80 → 1.0) ══ */
+    // score panel
     const p4 = phaseT(t, 0.80, 1.0);
     if (p4 > 0) {
       const ep4 = easeOutBounce(p4);
@@ -368,20 +365,20 @@ const Roll = (() => {
 
       const rating = getRating(ingredients.length);
 
-      // Panel shadow
+      // panel shadow
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillRect(panelX+4, panelY+4, panelW, panelH);
 
-      // Panel body
+      // panel body
       pixelRect(ctx, panelX, panelY, panelW, panelH, surf2Color, inkColor, 3);
 
-      // Colored top strip
+      // colored top strip
       pixelRect(ctx, panelX, panelY, panelW, 22, rating.color + 'CC', null);
 
-      // Rating label
+      // rating label
       pixelText(ctx, rating.label, cx, panelY+11, 7, '#FFFFFF');
 
-      // Stars row
+      // stars row
       const totalStars = 5;
       const starSpacing = 26;
       const starsStartX = cx - (totalStars-1)*starSpacing/2;
@@ -397,7 +394,7 @@ const Roll = (() => {
       }
     }
 
-    /* ══ Rolling phase messages ══ */
+    // rolling phase messages
     if (t < 0.78) {
       const msgs = [
         [0.00, 'PREPARING...'],
@@ -412,7 +409,7 @@ const Roll = (() => {
       const wobX = Math.round(Math.sin(t*12)*2);
       const alpha = clamp((0.78-t)/0.15, 0, 1);
 
-      // Pixel text box
+      // pixel text box
       const tw = 180, th = 24, tx = cx-tw/2, ty = H-48;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -460,7 +457,7 @@ const Roll = (() => {
     footer.style.alignItems    = 'center';
     footer.style.gap           = '8px';
 
-    // Save to MongoDB if logged in
+    // save to mongoDB if logged in
     if (typeof Auth !== 'undefined' && Auth.isLoggedIn() && typeof DB !== 'undefined') {
       const canvas     = document.getElementById('roll-canvas');
       const canvasData = canvas ? canvas.toDataURL('image/jpeg', 0.5) : '';
