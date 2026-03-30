@@ -1,4 +1,4 @@
-# sushidaw
+# sushiDAW
 this was our submission to SOTONHACK 2026!
 a browser-based daw, combining two things we love sushi & music.
 
