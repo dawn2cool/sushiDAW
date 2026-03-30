@@ -2,6 +2,9 @@
 this was our submission to SOTONHACK 2026!
 a browser-based daw, combining two things we love sushi & music.
 
+## login page
+<img width="1847" height="1041" alt="Screenshot 2026-03-30 at 15-38-35 sushidaw — login" src="https://github.com/user-attachments/assets/5cd8a526-f13a-429c-9f2b-2e2503c0840b" />
+
 ## dark mode
 <img width="1847" height="1041" alt="Screenshot 2026-03-30 at 15-25-02 SushiDAW" src="https://github.com/user-attachments/assets/04d136d4-0cc8-4424-b276-16cfa61214a5" />
 
